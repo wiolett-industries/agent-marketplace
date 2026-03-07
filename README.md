@@ -22,12 +22,12 @@ Persistent, searchable memory for Claude Code, scoped per project. Stores contex
 Then enable memory for your project — run this from the project root:
 
 ```
-/memory-setup sk-proj-your-openai-key
+/project-memory:memory-setup sk-proj-your-openai-key
 ```
 
 Restart Claude Code. The `project-memory` MCP tools will be active for that project.
 
-Repeat `/memory-setup` in each project where you want memory enabled.
+Repeat `/project-memory:memory-setup` in each project where you want memory enabled.
 
 ### Manual
 
@@ -60,7 +60,7 @@ Repeat `/memory-setup` in each project where you want memory enabled.
 /plugin uninstall project-memory@knownout
 ```
 
-Remove `.mcp.json` entries from any projects where you ran `/memory-setup`.
+Remove `.mcp.json` entries from any projects where you ran `/project-memory:memory-setup`.
 
 ---
 
