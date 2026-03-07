@@ -64,28 +64,59 @@ Remove `.mcp.json` entries from any projects where you ran `/project-memory:memo
 
 ---
 
-## Two-Layer Design
+## How it works
 
-| Layer | Purpose | Access |
-|-------|---------|--------|
-| `light` | High-priority context, always loaded | `memory_read_light()` |
-| `deep` | Full knowledge store, searched on demand | `memory_search(query)` |
+### Two-layer design
+
+| Layer | Role | Size |
+|-------|------|------|
+| `light` | Short pointers to deep memories + critical always-needed facts | 1 sentence per entry |
+| `deep` | All actual content — detailed, fully searchable | No limit |
+
+At session start the `SessionStart` hook automatically injects two things into Claude's context:
+
+1. **Light layer** — your pointers and critical facts
+2. **Deep topic index** — all tags from deep entries, showing what's searchable
+
+This keeps context lean regardless of how much is stored. Claude knows what exists and fetches only what's needed via `memory_search`.
+
+### Example session context (what Claude sees on startup)
+
+```
+## Always-loaded context (light layer)
+- Deep memory: full deployment workflow available (search: deploy, gitlab)
+- Deep memory: MinIO upload commands (search: minio, uploads)
+- Active stack: Next.js frontend, FastAPI backend, PostgreSQL
+
+## Deep memory topics — call memory_search(topic) to load details
+credentials, deploy, gitlab, minio, pipeline, postgresql, uploads
+```
+
+### Saving a memory (the pointer pattern)
+
+Always save full detail to `deep`, then a 1-sentence pointer to `light`:
+
+```
+# Full content → deep
+memory_write("Deploy: git push origin main, tag vX.Y.Z, push tag, check GitLab pipeline list_pipelines(project_id=42)", tags=["deploy","gitlab"], layer="deep")
+
+# Pointer → light
+memory_write("Deep memory: deployment workflow via GitLab CI (search: deploy, gitlab)", tags=["deploy"], layer="light")
+```
+
+### Search
+
+`memory_search` uses hybrid scoring: 70% cosine similarity (OpenAI embeddings) + 30% BM25 keyword match, both normalized to [0,1].
 
 ## MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| `memory_write` | Store an entry (content + optional tags + layer) |
-| `memory_read_light` | Return all light entries instantly |
-| `memory_search` | Hybrid semantic+keyword search over deep entries |
-| `memory_delete` | Delete an entry by ID |
-| `memory_read_all` | Return all entries (no embeddings) |
-
-## How it works
-
-At the start of every session Claude calls `memory_read_light()` to load project context, then searches deep memory for the topic at hand. The included `using-project-memory` skill defines exactly when to read and save — external tool workflows, deployment steps, credentials you provide, errors and their fixes.
-
-`memory_search` uses hybrid scoring: 70% cosine similarity (OpenAI embeddings) + 30% BM25 keyword match, both normalized to [0,1].
+| `memory_write` | Store an entry. Default layer: `deep`. Use `light` only for 1-sentence pointers or critical facts. |
+| `memory_read_light` | Return all light entries (already injected by hook at session start). |
+| `memory_search` | Hybrid semantic+keyword search over deep entries. |
+| `memory_delete` | Delete an entry by ID. |
+| `memory_read_all` | Return all entries from both layers (no embeddings). |
 
 ## Storage
 
@@ -97,3 +128,4 @@ Memory lives in `.memory/memory.db` relative to the project root. Each project h
 - **Storage:** `node:sqlite` (Node.js 22.5+ built-in)
 - **Embeddings:** OpenAI `text-embedding-3-small`
 - **Search:** Cosine similarity (0.7) + FTS5 BM25 (0.3)
+- **Session hook:** `SessionStart` injects light layer + deep topic index before first message
