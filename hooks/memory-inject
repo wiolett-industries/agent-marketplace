@@ -69,7 +69,7 @@ const topicSection = topicSet.size === 0
   ? '(none yet)'
   : Array.from(topicSet).sort().join(', ');
 
-process.stdout.write(`<project-memory>\n## Light memory (always loaded)\n${lightSection}\n\n## Deep memory topics — use memory_get(id) or memory_search(topic)\n${topicSection}\n</project-memory>`);
+process.stdout.write(`<project-memory>\nLoad and follow the skill: project-memory:using-project-memory\n\n## Light memory (always loaded)\n${lightSection}\n\n## Deep memory topics — use memory_get(id) or memory_search(topic)\n${topicSection}\n</project-memory>`);
 NODEJS
 )
 
