@@ -7,6 +7,7 @@ export interface Entry {
   content: string;
   tags: string[];
   layer: 'light' | 'deep';
+  ref: string | null;       // light pointer entries: ID of the deep entry they point to
   embedding: number[];
   created_at: number;
   updated_at: number;
@@ -17,6 +18,7 @@ interface RawEntry {
   content: string;
   tags: string;
   layer: string;
+  ref: string | null;
   embedding: string;
   created_at: number;
   updated_at: number;
@@ -54,11 +56,18 @@ export function getDb(): DatabaseSync {
       content    TEXT NOT NULL,
       tags       TEXT NOT NULL DEFAULT '[]',
       layer      TEXT NOT NULL DEFAULT 'deep',
+      ref        TEXT DEFAULT NULL,
       embedding  TEXT NOT NULL DEFAULT '[]',
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
   `);
+
+  // Migration: add ref column to existing DBs that don't have it
+  const cols = dbInstance.prepare("PRAGMA table_info(entries)").all() as unknown as { name: string }[];
+  if (!cols.some(c => c.name === 'ref')) {
+    runDDL(dbInstance, 'ALTER TABLE entries ADD COLUMN ref TEXT DEFAULT NULL');
+  }
 
   runDDL(dbInstance, `
     CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(
@@ -96,6 +105,7 @@ function parseEntry(raw: RawEntry): Entry {
     ...raw,
     tags: JSON.parse(raw.tags) as string[],
     layer: raw.layer as 'light' | 'deep',
+    ref: raw.ref ?? null,
     embedding: JSON.parse(raw.embedding) as number[],
   };
 }
@@ -106,25 +116,27 @@ export function upsertEntry(entry: Entry): void {
 
   if (existing) {
     database.prepare(`
-      UPDATE entries SET content = ?, tags = ?, layer = ?, embedding = ?, updated_at = ?
+      UPDATE entries SET content = ?, tags = ?, layer = ?, ref = ?, embedding = ?, updated_at = ?
       WHERE id = ?
     `).run(
       entry.content,
       JSON.stringify(entry.tags),
       entry.layer,
+      entry.ref ?? null,
       JSON.stringify(entry.embedding),
       entry.updated_at,
       entry.id
     );
   } else {
     database.prepare(`
-      INSERT INTO entries (id, content, tags, layer, embedding, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO entries (id, content, tags, layer, ref, embedding, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       entry.id,
       entry.content,
       JSON.stringify(entry.tags),
       entry.layer,
+      entry.ref ?? null,
       JSON.stringify(entry.embedding),
       entry.created_at,
       entry.updated_at
@@ -132,8 +144,16 @@ export function upsertEntry(entry: Entry): void {
   }
 }
 
+export function getEntryById(id: string): Entry | null {
+  const database = getDb();
+  const row = database.prepare('SELECT * FROM entries WHERE id = ?').get(id) as unknown as RawEntry | undefined;
+  return row ? parseEntry(row) : null;
+}
+
 export function deleteEntry(id: string): boolean {
   const database = getDb();
+  // Cascade: also delete any light pointer that references this deep entry
+  database.prepare("DELETE FROM entries WHERE ref = ?").run(id);
   const result = database.prepare('DELETE FROM entries WHERE id = ?').run(id);
   return (result.changes as number) > 0;
 }
@@ -152,11 +172,12 @@ export function getDeepEntries(): Entry[] {
 
 export function getAllEntries(): Omit<Entry, 'embedding'>[] {
   const database = getDb();
-  const rows = database.prepare('SELECT id, content, tags, layer, created_at, updated_at FROM entries ORDER BY updated_at DESC').all() as unknown as Omit<RawEntry, 'embedding'>[];
+  const rows = database.prepare('SELECT id, content, tags, layer, ref, created_at, updated_at FROM entries ORDER BY updated_at DESC').all() as unknown as Omit<RawEntry, 'embedding'>[];
   return rows.map(raw => ({
     ...raw,
     tags: JSON.parse(raw.tags) as string[],
     layer: raw.layer as 'light' | 'deep',
+    ref: raw.ref ?? null,
   }));
 }
 

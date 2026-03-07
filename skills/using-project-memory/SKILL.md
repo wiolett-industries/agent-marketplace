@@ -7,143 +7,103 @@ description: Use when the project-memory MCP server is available - at every conv
 
 ## Overview
 
-The `project-memory` MCP gives Claude persistent memory scoped to the current project.
+Two layers, one write call:
 
-**Two layers with distinct roles:**
+| Layer | Role |
+|-------|------|
+| `deep` | Full content — all details, fully searchable |
+| `light` | Auto-created pointer to a deep entry, containing its ID |
 
-| Layer | Role | Size |
-|-------|------|------|
-| `light` | Short pointers to deep memories + critical always-needed facts | 1 sentence max per entry |
-| `deep` | All actual content — detailed, fully searchable | No limit |
+`memory_write` always saves to deep and automatically creates a light pointer. You never need to write to both layers manually.
 
-**Core principle:** Store everything in `deep`. Use `light` only as a lean index so Claude knows what exists.
+## Session Start
 
-## Session Start — What You Already Have
+The hook has already injected into your context:
+1. **Light memory** — pointers like `[→ abc123] Translations workflow...` plus any standalone facts
+2. **Deep topic index** — all tags from deep entries
 
-At session start the hook has already injected:
-1. **Light layer** — your pointers and critical facts
-2. **Deep memory topic index** — all tags from deep entries, showing what's searchable
+Read these before doing anything. When a pointer is relevant, call `memory_get(id)` to load the full content.
 
-Read these before responding. If a topic in the index is relevant to the task, call `memory_search(topic)` to load it.
+## Writing Memory — One Call
 
-## The Pointer Pattern — How to Use Light Correctly
-
-**Wrong:** Saving full content to light (bloats context, defeats the purpose)
 ```
-# BAD - don't do this
-memory_write("Deploy: git push origin main, then git tag v1.x.x, push tag, check GitLab pipeline...", layer="light")
-```
-
-**Right:** Save detail to deep, save a 1-sentence pointer to light
-```
-# Step 1: save detail to deep
 memory_write(
-  content="Deploy workflow: 1) git push origin main 2) git tag v1.x.x && git push origin v1.x.x 3) Check pipeline via GitLab MCP list_pipelines(project_id=42), wait for 'success' on tag pipeline.",
-  tags=["deploy", "gitlab", "pipeline", "release"],
-  layer="deep"
-)
-
-# Step 2: save pointer to light
-memory_write(
-  content="Deep memory: full deployment workflow available (search: deploy, gitlab)",
-  tags=["deploy"],
-  layer="light"
+  content="Full detail: mc alias pearldiver, path misc/static/com/pearldivergame/dev, run VITE_ENVIRONMENT=testnet npm run gen-translations after editing CSV files. Never edit local JSON files directly.",
+  tags=["translations", "minio", "mc", "i18n"],
+  summary="Translations workflow — mc alias pearldiver, run gen-translations after CSV edits"
 )
 ```
 
-Now at session start Claude sees `"Deep memory: full deployment workflow available"` without loading the full text. When a deploy task comes up, Claude calls `memory_search("deploy")` to get the details.
+This creates:
+- **Deep entry** `abc123`: full content, searchable by tags
+- **Light pointer**: `[→ abc123] Translations workflow — mc alias pearldiver, run gen-translations after CSV edits [translations, minio, mc, i18n]`
 
-## What Goes in Light (Pointers + Critical Facts)
+Next session, Claude sees the pointer in context and calls `memory_get("abc123")` when needed.
 
-**Pointers** — 1 sentence referencing what's in deep:
-- `"Deep memory: S3/MinIO upload workflow via mc client (search: minio, uploads)"`
-- `"Deep memory: GitLab deploy process with tag-based pipeline (search: deploy)"`
-- `"Deep memory: GitHub PAT stored for knownout account (search: github, credentials)"`
+## Reading Memory
 
-**Critical always-needed facts** — things Claude needs without searching, kept very short:
-- `"Active stack: Next.js frontend, FastAPI backend, PostgreSQL"`
-- `"Monorepo: apps/web, apps/api, packages/shared"`
-- `"Main branch deploys to staging; tags deploy to prod"`
+| Situation | Tool |
+|-----------|------|
+| Session start, see `[→ id]` pointer and need full details | `memory_get(id)` |
+| Don't have ID, need to find by topic | `memory_search("topic")` |
+| User asks "show memory" / "what do you remember" | `memory_read_light()` |
+| Auditing or cleaning up entries | `memory_read_all()` — management only |
 
-**NOT for light:**
-- Full command sequences
-- Long explanations
-- Anything over 1 sentence
+**Never call `memory_read_all` for a regular read request.** It dumps the entire database.
 
 ## Credentials and Tokens — Save Immediately
 
-**When the user provides any credential — save it to deep before using it.**
-
-The `.memory/` database is gitignored and local-only. Safe to store credentials.
+When the user provides any credential, save it **before using it**. The `.memory/` database is gitignored — safe to store credentials.
 
 ```
-# Save to deep with credential content
 memory_write(
-  content="GitHub PAT for knownout: ghp_xxxx. Use when osxkeychain has wrong account.",
+  content="GitHub PAT for knownout account: ghp_xxxx. Use when osxkeychain has wrong account cached.",
   tags=["github", "token", "credentials"],
-  layer="deep"
+  summary="GitHub PAT for knownout account (use when osxkeychain fails)"
 )
-# Save pointer to light
+```
+
+## Standalone Light Facts (no deep counterpart)
+
+For very short always-needed facts that don't need a deep entry, pass `layer="light"` explicitly:
+
+```
 memory_write(
-  content="Deep memory: GitHub PAT for knownout stored (search: github, credentials)",
-  tags=["credentials"],
+  content="Active stack: Next.js frontend, FastAPI backend, PostgreSQL",
+  tags=["stack"],
   layer="light"
 )
 ```
 
-**Do not wait.** Save credential as the very next action after receiving it.
-
-## Decision Flow
-
-```
-Session starts?
-  → Read injected light layer + topic index (already in context)
-  → For each relevant topic in index → memory_search(topic)
-
-User asks about something?
-  → Check topic index — does a relevant tag exist?
-  → If yes → memory_search(tag) before responding
-
-User provides a credential/token?
-  → memory_write to deep IMMEDIATELY
-  → memory_write pointer to light
-
-Completed an external task (upload, deploy, API call, fix)?
-  → memory_write detail to deep with good tags
-  → memory_write 1-sentence pointer to light
-```
-
-## What to Save to Deep
+## What to Save
 
 | Operation | What to capture |
 |-----------|-----------------|
-| **Uploads** | Tool (mc, aws, gsutil), alias/bucket/path, exact command |
+| **Uploads** | Tool, alias/bucket/path, exact command pattern |
 | **Deployments** | Full steps in order, branch names, tag format, CI tool |
-| **Pipeline checks** | How to check status, what success looks like |
+| **Pipeline checks** | How to check status, success criteria |
 | **Database ops** | Connection method, migration command, env |
 | **External APIs** | Endpoint patterns, auth, rate limits |
 | **Credentials** | Token values, where they apply |
 | **Errors + fixes** | What broke, exact fix, root cause |
 
-## Reading Memory — Use the Right Tool
+## Decision Flow
 
-| User says | Correct tool |
-|-----------|-------------|
-| "show memory", "what do you remember", "read project memory" | `memory_read_light()` — shows pointers + topic index |
-| "tell me about deployments" / any specific topic | `memory_search("deploy")` |
-| "show all memory", "list everything", "audit memory" | `memory_read_all()` — management only |
+```
+Session starts?
+  → Read injected light memory and topic index (already in context)
+  → For relevant [→ id] pointers → memory_get(id)
 
-**Never call `memory_read_all` for a casual read request.** It dumps the entire database into context. Use `memory_read_light` to show the overview, then `memory_search` for specifics.
+User provides credential/token?
+  → memory_write(...) IMMEDIATELY before using it
 
-## What NOT to Save
-
-- Temporary debug output or one-off results
-- Information already in the repo (README, Makefile, .env.example)
-- Standard library usage with no project-specific twist
+Completed external task?
+  → memory_write(content=<full detail>, tags=[...], summary=<1 sentence>)
+```
 
 ## Red Flags
 
-- Light layer has entries longer than 1–2 sentences → move content to deep, replace with pointer
-- You answer a question about the project without checking the topic index first
-- User says "like we discussed before" and you have no context → you missed a `memory_search`
+- You call `memory_read_all` when the user just wants to see what's saved
+- You write separate light and deep entries manually instead of one `memory_write` call
 - User provides a token and you use it without saving it first
+- You search deep memory for something that's already in a light pointer you can see
