@@ -1,6 +1,6 @@
 ---
 name: using-project-memory
-description: Use when the project-memory MCP server is available - at every conversation start and after completing any task involving external tools, deployments, uploads, pipelines, credentials, or project-specific workflows
+description: Use when the project-memory MCP server is available - at every conversation start and after completing any task involving external tools, deployments, uploads, pipelines, credentials, tokens, or project-specific workflows
 ---
 
 # Using Project Memory
@@ -40,6 +40,33 @@ Never skip this. Zero-context responses waste the user's time.
 | **Manual infra steps** | Anything done outside normal code flow |
 | **Errors + fixes** | What broke, exact fix applied, root cause |
 
+## Credentials and Tokens — Save Immediately
+
+**When the user provides any credential during a session — save it before using it.**
+
+This includes: API keys, personal access tokens, passwords, connection strings, service account keys, SSH passphrases, webhook secrets.
+
+The `.memory/` database is gitignored and local-only. It is safe to store credentials there.
+
+```
+content: "GitHub PAT for knownout account: ghp_xxxx. Use for git push when osxkeychain has wrong account cached."
+tags: ["github", "token", "git", "credentials"]
+layer: "deep"
+```
+
+```
+content: "OpenAI API key: sk-proj-xxxx. Used for project-memory MCP embeddings."
+tags: ["openai", "credentials"]
+layer: "deep"
+```
+
+**Do not wait until the end of the task.** Save the credential as the very next action after receiving it, before doing anything else with it.
+
+**Red flags:**
+- User pastes a token and you use it but don't save it
+- Next session: user has to paste the same token again
+- You ask "can you provide the API key again?"
+
 ## Concrete Examples
 
 **S3/MinIO upload via mc client:**
@@ -69,6 +96,7 @@ layer: "light"
 Starting conversation? → memory_read_light() always
 About to do external operation? → memory_search("uploads") / memory_search("deploy")
 User mentions unfamiliar tool/service? → memory_search(tool name)
+User provides a credential/token? → memory_write(...) IMMEDIATELY, before anything else
 Just completed any external task? → memory_write(...) immediately
 ```
 

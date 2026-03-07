@@ -23,26 +23,25 @@ Persistent, searchable memory for Claude Code, scoped per project. Stores contex
 
 ### As a Claude Code plugin (recommended)
 
-Register this repo as a local marketplace and install:
-
 ```bash
-/plugin marketplace add /Users/knownout/Claude/claude-project-memory
-/plugin install project-memory@local
+/plugin marketplace add knownout/claude-project-memory
+/plugin install project-memory@knownout
 ```
 
-Then run the setup command once to configure the MCP server:
+Then run the setup command once to configure the MCP server globally:
 
 ```
 /memory-setup sk-proj-your-openai-key
 ```
 
-That's it. Restart Claude Code and the `project-memory` tools will be available.
+Restart Claude Code — the `project-memory` tools will be available in every session.
 
 ### Manual installation
 
-1. Install dependencies:
+1. Clone and install dependencies:
    ```bash
-   cd /path/to/claude-project-memory && npm install
+   git clone https://github.com/knownout/claude-project-memory.git
+   cd claude-project-memory && npm install
    ```
 
 2. Add to `~/.claude/mcp.json`:
@@ -64,16 +63,22 @@ That's it. Restart Claude Code and the `project-memory` tools will be available.
 
 ## Requirements
 
-- Node.js 22.5+ (uses built-in `node:sqlite`)
-- OpenAI API key (for embeddings — keyword search still works without it)
+- Node.js 22.5+ (uses built-in `node:sqlite` — no native compilation)
+- OpenAI API key (for embeddings — keyword-only fallback works without it)
+
+## How it works
+
+Claude automatically calls `memory_read_light()` at the start of each session to load your project context. When you need to dig deeper, `memory_search(query)` runs a hybrid search: 70% semantic similarity (OpenAI embeddings) + 30% BM25 keyword match, both normalized and merged.
+
+The included `using-project-memory` skill teaches Claude *when* to save — external tool workflows, deployment steps, credentials you provide, errors and their fixes.
 
 ## Storage
 
-Memory is stored in `.memory/memory.db` relative to the **project root** (the directory Claude Code opens). Each project gets its own isolated memory database.
+Memory lives in `.memory/memory.db` relative to the project root (the directory Claude Code opens). Each project gets its own isolated database. The `.memory/` directory is gitignored by default.
 
 ## Architecture
 
-- **Runtime:** TypeScript / Node.js (run directly via `tsx`, no build step)
-- **Storage:** SQLite via `node:sqlite` (Node.js built-in, no native compilation)
+- **Runtime:** TypeScript / Node.js via `tsx` (no build step)
+- **Storage:** `node:sqlite` (Node.js 22.5+ built-in)
 - **Embeddings:** OpenAI `text-embedding-3-small`
-- **Search:** Cosine similarity (weight 0.7) + FTS5 BM25 (weight 0.3), both normalized to [0,1]
+- **Search:** Cosine similarity (0.7) + FTS5 BM25 (0.3), normalized to [0,1]
