@@ -25,7 +25,7 @@ Persistent, searchable memory for Claude Code, scoped per project. Stores contex
 
 ```
 /plugin marketplace add knownout/claude-project-memory
-/plugin install project-memory@knownout
+/plugin install --scope user project-memory@knownout
 ```
 
 Then run the setup command once to configure the MCP server globally:

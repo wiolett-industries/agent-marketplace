@@ -56,8 +56,8 @@ The entry to add:
 ```json
 {
   "project-memory": {
-    "command": "node",
-    "args": ["--import", "tsx/esm", "--no-warnings", "<PLUGIN_PATH>/src/index.ts"],
+    "command": "<PLUGIN_PATH>/node_modules/.bin/tsx",
+    "args": ["<PLUGIN_PATH>/src/index.ts"],
     "env": {
       "OPENAI_API_KEY": "<API_KEY>"
     }
