@@ -14,11 +14,11 @@ const server = new McpServer({
 
 server.tool(
   'memory_write',
-  'Write or update a memory entry. Computes and stores an embedding for semantic search. Default layer is "deep".',
+  'Write a memory entry. Default layer is "deep" for all detailed content. Use "light" ONLY for very short pointer entries (1 sentence max) that reference what is stored in deep memory, or for critical always-needed facts like active config values. Never store long content in light.',
   {
-    content: z.string().describe('The memory content to store'),
-    tags: z.array(z.string()).optional().describe('Optional tags for categorization'),
-    layer: z.enum(['light', 'deep']).optional().describe('"light" for always-available high-priority context, "deep" for searchable knowledge store (default)'),
+    content: z.string().describe('The memory content to store. For light entries: keep to 1 sentence. For deep entries: full detail.'),
+    tags: z.array(z.string()).optional().describe('Tags for categorization and search. Required for deep entries — used to build the topic index.'),
+    layer: z.enum(['light', 'deep']).optional().describe('"deep" (default): detailed content, fully searchable. "light": only short pointers or critical always-needed facts injected at every session start.'),
   },
   async ({ content, tags, layer }) => {
     const result = await handleWrite({ content, tags, layer });
@@ -30,7 +30,7 @@ server.tool(
 
 server.tool(
   'memory_read_light',
-  'Return all light-layer entries instantly (no search). Use at conversation start for immediate project context.',
+  'Return all light-layer entries (pointers and critical facts). Already injected at session start via hook — only call this if you need to explicitly refresh or verify light layer contents.',
   {},
   () => {
     const entries = handleReadLight();
