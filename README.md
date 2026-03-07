@@ -23,7 +23,7 @@ Persistent, searchable memory for Claude Code, scoped per project. Stores contex
 
 ### As a Claude Code plugin (recommended)
 
-```bash
+```
 /plugin marketplace add knownout/claude-project-memory
 /plugin install project-memory@knownout
 ```
