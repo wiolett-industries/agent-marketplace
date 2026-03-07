@@ -4,6 +4,5 @@
   "description": "Persistent, searchable project-level memory for Claude. Two-layer store: light (always-loaded context) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
   "author": {
     "name": "knownout"
-  },
-  "hooks": "./hooks/hooks.json"
+  }
 }
