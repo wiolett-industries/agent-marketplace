@@ -9,7 +9,7 @@ import { handleReadAll } from './tools/read-all.js';
 
 const server = new McpServer({
   name: 'project-memory',
-  version: '1.3.0',
+  version: '1.4.0',
 });
 
 server.tool(
@@ -30,7 +30,7 @@ server.tool(
 
 server.tool(
   'memory_read_light',
-  'Return all light-layer entries (pointers and critical facts). Already injected at session start via hook — only call this if you need to explicitly refresh or verify light layer contents.',
+  'Return all light-layer entries (pointers and critical facts). Use this when the user asks to "show memory", "what do you remember", "read project memory", or similar. For specific topics use memory_search instead. Already injected at session start — call this to refresh if needed.',
   {},
   () => {
     const entries = handleReadLight();
@@ -71,7 +71,7 @@ server.tool(
 
 server.tool(
   'memory_read_all',
-  'Return all entries from both layers without embeddings. Useful for memory management.',
+  'Return ALL entries from both layers — for memory management and cleanup only. Do NOT use this when the user asks to read or show memory (use memory_read_light instead). Only use when the user explicitly wants to audit, edit, or delete entries.',
   {},
   () => {
     const entries = handleReadAll();

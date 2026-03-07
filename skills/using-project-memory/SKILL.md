@@ -125,6 +125,16 @@ Completed an external task (upload, deploy, API call, fix)?
 | **Credentials** | Token values, where they apply |
 | **Errors + fixes** | What broke, exact fix, root cause |
 
+## Reading Memory — Use the Right Tool
+
+| User says | Correct tool |
+|-----------|-------------|
+| "show memory", "what do you remember", "read project memory" | `memory_read_light()` — shows pointers + topic index |
+| "tell me about deployments" / any specific topic | `memory_search("deploy")` |
+| "show all memory", "list everything", "audit memory" | `memory_read_all()` — management only |
+
+**Never call `memory_read_all` for a casual read request.** It dumps the entire database into context. Use `memory_read_light` to show the overview, then `memory_search` for specifics.
+
 ## What NOT to Save
 
 - Temporary debug output or one-off results
