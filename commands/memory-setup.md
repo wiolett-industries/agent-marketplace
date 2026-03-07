@@ -1,11 +1,11 @@
 ---
-description: Set up the project-memory MCP server globally. Installs npm dependencies and registers the server in ~/.claude/mcp.json.
+description: Set up the project-memory MCP server for the current project. Installs npm dependencies and registers the server in .mcp.json in the current working directory.
 argument-hint: Optional OpenAI API key (sk-...)
 ---
 
 # Project Memory Setup
 
-You are setting up the `project-memory` MCP server so it is available in all Claude Code sessions.
+You are setting up the `project-memory` MCP server for the **current project** (scoped to the current working directory).
 
 ## Steps
 
@@ -43,9 +43,14 @@ If not set and not provided as argument, ask the user:
 cd "$PLUGIN_PATH" && npm install --prefer-offline 2>&1 | tail -5
 ```
 
-### 4. Register MCP server in ~/.claude/mcp.json
+### 4. Register MCP server in .mcp.json in the current project
 
-Read the current `~/.claude/mcp.json` (it may not exist yet). Merge in the project-memory server entry, then write it back.
+Get the current working directory:
+```bash
+pwd
+```
+
+Read the existing `.mcp.json` in that directory (it may not exist yet). Merge in the project-memory server entry, then write it back.
 
 The entry to add:
 ```json
@@ -62,15 +67,16 @@ The entry to add:
 
 Replace `<PLUGIN_PATH>` with the actual plugin path and `<API_KEY>` with the key obtained in step 2.
 
-The full `~/.claude/mcp.json` must be valid JSON with this structure:
+The full `.mcp.json` must be valid JSON with this structure:
 ```json
 {
   "mcpServers": {
-    ... existing servers ...,
     "project-memory": { ... }
   }
 }
 ```
+
+Write the file to `<CWD>/.mcp.json`.
 
 ### 5. Verify
 
@@ -86,10 +92,10 @@ EOF
 ### 6. Report result
 
 Tell the user:
-- Plugin path found
-- MCP server registered at `~/.claude/mcp.json`
+- Plugin path found at `PLUGIN_PATH`
+- MCP server registered in `.mcp.json` in the current project directory
 - **Restart Claude Code** to activate the `project-memory` MCP tools
-- On first use in a new project, run `/memory-setup` again from that project directory if you want a project-scoped `.mcp.json` instead of the global one
+- Run `/memory-setup` again in any other project where you want memory enabled
 
 ---
 
@@ -99,4 +105,4 @@ Tell the user:
 
 **OPENAI_API_KEY missing** — semantic search will fail; keyword-only fallback still works but results will be lower quality
 
-**MCP server not appearing** — fully quit and relaunch Claude Code after editing `mcp.json`
+**MCP server not appearing** — fully quit and relaunch Claude Code after editing `.mcp.json`
