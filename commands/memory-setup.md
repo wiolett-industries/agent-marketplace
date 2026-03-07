@@ -78,24 +78,43 @@ The full `.mcp.json` must be valid JSON with this structure:
 
 Write the file to `<CWD>/.mcp.json`.
 
-### 5. Verify
+### 5. Initialize the database
+
+Create `.memory/` and initialize the SQLite schema so the hook can find the database immediately (before the MCP server is ever started).
+
+Replace `<CWD>` with the actual working directory from step 4:
 
 ```bash
-node --input-type=module --no-warnings << 'EOF'
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const { DatabaseSync } = require('node:sqlite');
-console.log('node:sqlite OK');
-EOF
+mkdir -p <CWD>/.memory
+DB_INIT_PATH="<CWD>/.memory/memory.db" node --input-type=module --no-warnings << 'NODEOF'
+import { DatabaseSync } from 'node:sqlite';
+const db = new DatabaseSync(process.env.DB_INIT_PATH);
+db.prepare("CREATE TABLE IF NOT EXISTS entries (id TEXT PRIMARY KEY, content TEXT NOT NULL, tags TEXT NOT NULL DEFAULT '[]', layer TEXT NOT NULL DEFAULT 'deep', ref TEXT DEFAULT NULL, embedding TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)").run();
+db.prepare("CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(content, tags, content='entries', content_rowid='rowid')").run();
+console.log('Database initialized');
+NODEOF
 ```
 
-### 6. Report result
+Also add `.memory/` to `.gitignore` if not already present:
+
+```bash
+grep -qxF '.memory/' <CWD>/.gitignore 2>/dev/null || echo '.memory/' >> <CWD>/.gitignore
+```
+
+### 6. Verify
+
+```bash
+ls -lh <CWD>/.memory/memory.db
+```
+
+### 7. Report result
 
 Tell the user:
 - Plugin path found at `PLUGIN_PATH`
 - MCP server registered in `.mcp.json` in the current project directory
+- Database initialized at `.memory/memory.db` (gitignored)
 - **Restart Claude Code** to activate the `project-memory` MCP tools
-- Run `/memory-setup` again in any other project where you want memory enabled
+- Run `/project-memory:memory-setup` again in any other project where you want memory enabled
 
 ---
 
