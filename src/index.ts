@@ -9,7 +9,7 @@ import { handleReadAll } from './tools/read-all.js';
 
 const server = new McpServer({
   name: 'project-memory',
-  version: '1.0.0',
+  version: '1.3.0',
 });
 
 server.tool(

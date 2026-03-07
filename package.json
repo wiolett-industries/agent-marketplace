@@ -1,6 +1,6 @@
 {
   "name": "claude-project-memory",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "type": "module",
   "scripts": {
     "start": "NODE_NO_WARNINGS=1 tsx src/index.ts"
