@@ -1,0 +1,13 @@
+{
+  "name": "project-memory",
+  "displayName": "Project Memory",
+  "description": "Persistent, searchable project-level memory for Claude. Two-layer store: light (always-loaded context) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
+  "version": "1.0.0",
+  "author": {
+    "name": "knownout"
+  },
+  "license": "MIT",
+  "keywords": ["memory", "mcp", "context", "embeddings", "search"],
+  "skills": "./skills/",
+  "commands": "./commands/"
+}
