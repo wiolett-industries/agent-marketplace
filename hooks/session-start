@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# SessionStart hook for project-memory plugin
+# Reads light-layer entries directly from .memory/memory.db in CWD
+# and injects them as session context so Claude has them without needing to call any tool.
+
+set -euo pipefail
+
+DB_PATH="${PWD}/.memory/memory.db"
+
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+# If no DB exists yet, inject a minimal reminder and exit
+if [ ! -f "$DB_PATH" ]; then
+    context="<project-memory>No memory database found for this project yet. Run /project-memory:memory-setup to enable project memory.</project-memory>"
+    context_escaped=$(escape_for_json "$context")
+    cat <<EOF
+{
+  "additional_context": "${context_escaped}",
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "${context_escaped}"
+  }
+}
+EOF
+    exit 0
+fi
+
+# Read light entries from SQLite using Node.js (available since project has node)
+LIGHT_ENTRIES=$(node --no-warnings --input-type=module <<'NODEJS'
+import { DatabaseSync } from 'node:sqlite';
+import { readFileSync } from 'node:fs';
+
+const db = new DatabaseSync(process.env.DB_PATH);
+const rows = db.prepare(
+  "SELECT content, tags, created_at FROM entries WHERE layer = 'light' ORDER BY updated_at DESC"
+).all();
+
+if (rows.length === 0) {
+  console.log('__EMPTY__');
+  process.exit(0);
+}
+
+const formatted = rows.map(row => {
+  const tags = JSON.parse(row.tags);
+  const tagStr = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
+  return `- ${row.content}${tagStr}`;
+}).join('\n');
+
+console.log(formatted);
+NODEJS
+)
+
+if [ "$LIGHT_ENTRIES" = "__EMPTY__" ] || [ -z "$LIGHT_ENTRIES" ]; then
+    context="<project-memory>Project memory is active. No light-layer entries yet. Use memory_write with layer=\"light\" to store always-available context. Use memory_search to query deep memory.</project-memory>"
+else
+    context="<project-memory>
+## Project Memory — Light Layer (always loaded)
+
+${LIGHT_ENTRIES}
+
+---
+Use memory_search(query) to retrieve deep memory entries relevant to the current task.
+Use memory_write to save new context after completing tasks.
+</project-memory>"
+fi
+
+context_escaped=$(escape_for_json "$context")
+
+cat <<EOF
+{
+  "additional_context": "${context_escaped}",
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "${context_escaped}"
+  }
+}
+EOF
+
+exit 0

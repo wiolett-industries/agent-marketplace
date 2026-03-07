@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "knownout's Claude Code plugins",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
@@ -15,7 +15,7 @@
         "url": "https://github.com/knownout/claude-project-memory.git"
       },
       "description": "Persistent, searchable project-level memory for Claude. Two-layer store: light (always-loaded) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "strict": true
     }
   ]
