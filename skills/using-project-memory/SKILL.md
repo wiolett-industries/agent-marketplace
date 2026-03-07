@@ -11,14 +11,21 @@ The `project-memory` MCP gives Claude persistent memory scoped to the current pr
 
 **Core principle:** Read at start. Save after any non-trivial external operation. Future Claude will thank you.
 
-## Mandatory Start-of-Session Ritual
+## THE IRON LAW: Read Memory First, Every Single Session
 
-At the **very beginning** of every conversation, BEFORE doing anything else:
+**BEFORE doing ANYTHING else at the start of every conversation — no exceptions:**
 
-1. Call `memory_read_light()` — get immediate project context
-2. If the task involves an area you worked on before, call `memory_search(query)` to pull relevant deep memories
+1. Call `memory_read_light()` — loads all high-priority project context instantly
+2. Call `memory_search(query)` for the topic at hand if it might have been touched before
 
-Never skip this. Zero-context responses waste the user's time.
+This is not optional. Not "when relevant". Not "if the project seems complex". **Every session. Always. First.**
+
+**Why:** Without this, you are starting from zero and will ask the user to re-explain things Claude already knows. That is a failure.
+
+**Red flags you skipped the ritual:**
+- You ask about something the user already told Claude in a previous session
+- User says "like we discussed before" and you have no context
+- You suggest an approach that contradicts a decision already made
 
 ## What to Save
 
@@ -90,10 +97,10 @@ tags: ["deploy", "conventions"]
 layer: "light"
 ```
 
-## When to Search vs When to Read Light
+## Decision Flow
 
 ```
-Starting conversation? → memory_read_light() always
+Session starts? → memory_read_light() ALWAYS, then memory_search(topic)
 About to do external operation? → memory_search("uploads") / memory_search("deploy")
 User mentions unfamiliar tool/service? → memory_search(tool name)
 User provides a credential/token? → memory_write(...) IMMEDIATELY, before anything else
