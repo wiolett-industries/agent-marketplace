@@ -1,12 +1,11 @@
 {
   "hooks": {
-    "SessionStart": [
+    "UserPromptSubmit": [
       {
-        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "bash '${CLAUDE_PLUGIN_ROOT}/hooks/session-start'",
+            "command": "bash '${CLAUDE_PLUGIN_ROOT}/hooks/memory-inject'",
             "async": false
           }
         ]
