@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { handleWrite } from './tools/write.js';
 import { handleGet } from './tools/get.js';
-import { handleReadLight } from './tools/read-light.js';
+import { handleReadLite } from './tools/read-lite.js';
 import { handleSearch } from './tools/search.js';
 import { handleDelete } from './tools/delete.js';
 import { handleReadAll } from './tools/read-all.js';
@@ -15,12 +15,12 @@ const server = new McpServer({
 
 server.tool(
   'memory_write',
-  'Save a memory. Always saves full content to deep layer and automatically creates a light pointer entry linking back to it via ID. Use the optional summary param for a concise 1-sentence pointer label — otherwise the first 160 chars of content are used. Pass layer="light" only for standalone critical facts that have no deep counterpart.',
+  'Save a memory. Always saves full content to deep layer and automatically creates a lite pointer entry linking back to it via ID. Use the optional summary param for a concise 1-sentence pointer label — otherwise the first 160 chars of content are used. Pass layer="lite" only for standalone critical facts that have no deep counterpart.',
   {
     content: z.string().describe('Full content to store in deep memory.'),
     tags: z.array(z.string()).optional().describe('Tags for search and topic index. Use descriptive keywords.'),
-    summary: z.string().optional().describe('Short 1-sentence label for the auto-created light pointer. If omitted, first 160 chars of content are used.'),
-    layer: z.enum(['light', 'deep']).optional().describe('Default: "deep" — saves to deep and auto-creates light pointer. Use "light" only for standalone critical facts with no deep counterpart.'),
+    summary: z.string().optional().describe('Short 1-sentence label for the auto-created lite pointer. If omitted, first 160 chars of content are used.'),
+    layer: z.enum(['lite', 'deep']).optional().describe('Default: "deep" — saves to deep and auto-creates lite pointer. Use "lite" only for standalone critical facts with no deep counterpart.'),
   },
   async ({ content, tags, summary, layer }) => {
     const result = await handleWrite({ content, tags, summary, layer });
@@ -32,9 +32,9 @@ server.tool(
 
 server.tool(
   'memory_get',
-  'Fetch the full content of a specific deep memory entry by ID. Use this when you see a light pointer like "[→ abc123] ..." and need the full details.',
+  'Fetch the full content of a specific deep memory entry by ID. Use this when you see a lite pointer like "[→ abc123] ..." and need the full details.',
   {
-    id: z.string().describe('The deep entry ID from a light pointer (the part after "→ ")'),
+    id: z.string().describe('The deep entry ID from a lite pointer (the part after "→ ")'),
   },
   ({ id }) => {
     const entry = handleGet({ id });
@@ -45,11 +45,11 @@ server.tool(
 );
 
 server.tool(
-  'memory_read_light',
-  'Return all light-layer entries (pointers and critical facts). Already injected at session start — call this to explicitly refresh. When the user asks to "show memory" or "what do you remember", use this tool.',
+  'memory_read_lite',
+  'Return all lite-layer entries (pointers and critical facts). Already injected at session start — call this to explicitly refresh. When the user asks to "show memory" or "what do you remember", use this tool.',
   {},
   () => {
-    const entries = handleReadLight();
+    const entries = handleReadLite();
     return {
       content: [{ type: 'text', text: JSON.stringify(entries) }],
     };
@@ -73,7 +73,7 @@ server.tool(
 
 server.tool(
   'memory_delete',
-  'Delete a memory entry by ID. If deleting a deep entry, its auto-created light pointer is also deleted automatically.',
+  'Delete a memory entry by ID. If deleting a deep entry, its auto-created lite pointer is also deleted automatically.',
   {
     id: z.string().describe('The entry ID to delete'),
   },
@@ -87,7 +87,7 @@ server.tool(
 
 server.tool(
   'memory_read_all',
-  'Return ALL entries from both layers — for memory management and cleanup only. Do NOT use when the user asks to read or show memory (use memory_read_light instead).',
+  'Return ALL entries from both layers — for memory management and cleanup only. Do NOT use when the user asks to read or show memory (use memory_read_lite instead).',
   {},
   () => {
     const entries = handleReadAll();

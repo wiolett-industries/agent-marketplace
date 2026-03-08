@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # UserPromptSubmit hook for project-memory plugin
-# Injects light memory + deep topic index once per Claude session.
+# Injects lite memory + deep topic index once per Claude session.
 # Subsequent prompts in the same session are no-ops.
 
 set -euo pipefail
@@ -44,8 +44,11 @@ if (!cols.some(c => c.name === 'ref')) {
   db.prepare("ALTER TABLE entries ADD COLUMN ref TEXT DEFAULT NULL").run();
 }
 
-const lightRows = db.prepare(
-  "SELECT id, content, tags, ref FROM entries WHERE layer = 'light' ORDER BY updated_at DESC"
+// Migrate layer value 'light' -> 'lite' for older DBs
+db.prepare("UPDATE entries SET layer = 'lite' WHERE layer = 'light'").run();
+
+const liteRows = db.prepare(
+  "SELECT id, content, tags, ref FROM entries WHERE layer = 'lite' ORDER BY updated_at DESC"
 ).all();
 
 const deepRows = db.prepare(
@@ -57,9 +60,9 @@ for (const row of deepRows) {
   for (const tag of JSON.parse(row.tags)) topicSet.add(tag);
 }
 
-const lightSection = lightRows.length === 0
+const liteSection = liteRows.length === 0
   ? '(none yet)'
-  : lightRows.map(r => {
+  : liteRows.map(r => {
       const tags = JSON.parse(r.tags);
       const tagStr = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
       return `- ${r.content}${tagStr}`;
@@ -69,7 +72,7 @@ const topicSection = topicSet.size === 0
   ? '(none yet)'
   : Array.from(topicSet).sort().join(', ');
 
-process.stdout.write(`<project-memory>\nLoad and follow the skill: project-memory:using-project-memory\n\n## Light memory (always loaded)\n${lightSection}\n\n## Deep memory topics — use memory_get(id) or memory_search(topic)\n${topicSection}\n</project-memory>`);
+process.stdout.write(`<project-memory>\nLoad and follow the skill: project-memory:using-project-memory\n\n## Lite memory (always loaded)\n${liteSection}\n\n## Deep memory topics — use memory_get(id) or memory_search(topic)\n${topicSection}\n</project-memory>`);
 NODEJS
 )
 

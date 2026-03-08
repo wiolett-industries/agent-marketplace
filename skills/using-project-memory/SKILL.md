@@ -12,14 +12,14 @@ Two layers, one write call:
 | Layer | Role |
 |-------|------|
 | `deep` | Full content — all details, fully searchable |
-| `light` | Auto-created pointer to a deep entry, containing its ID |
+| `lite` | Auto-created pointer to a deep entry, containing its ID |
 
-`memory_write` always saves to deep and automatically creates a light pointer. You never need to write to both layers manually.
+`memory_write` always saves to deep and automatically creates a lite pointer. You never need to write to both layers manually.
 
 ## Session Start
 
 The hook has already injected into your context:
-1. **Light memory** — pointers like `[→ abc123] Translations workflow...` plus any standalone facts
+1. **Lite memory** — pointers like `[→ abc123] Translations workflow...` plus any standalone facts
 2. **Deep topic index** — all tags from deep entries
 
 Read these before doing anything. When a pointer is relevant, call `memory_get(id)` to load the full content.
@@ -36,7 +36,7 @@ memory_write(
 
 This creates:
 - **Deep entry** `abc123`: full content, searchable by tags
-- **Light pointer**: `[→ abc123] Translations workflow — mc alias pearldiver, run gen-translations after CSV edits [translations, minio, mc, i18n]`
+- **Lite pointer**: `[→ abc123] Translations workflow — mc alias pearldiver, run gen-translations after CSV edits [translations, minio, mc, i18n]`
 
 Next session, Claude sees the pointer in context and calls `memory_get("abc123")` when needed.
 
@@ -46,7 +46,7 @@ Next session, Claude sees the pointer in context and calls `memory_get("abc123")
 |-----------|------|
 | Session start, see `[→ id]` pointer and need full details | `memory_get(id)` |
 | Don't have ID, need to find by topic | `memory_search("topic")` |
-| User asks "show memory" / "what do you remember" | `memory_read_light()` |
+| User asks "show memory" / "what do you remember" | `memory_read_lite()` |
 | Auditing or cleaning up entries | `memory_read_all()` — management only |
 
 **Never call `memory_read_all` for a regular read request.** It dumps the entire database.
@@ -63,15 +63,15 @@ memory_write(
 )
 ```
 
-## Standalone Light Facts (no deep counterpart)
+## Standalone Lite Facts (no deep counterpart)
 
-For very short always-needed facts that don't need a deep entry, pass `layer="light"` explicitly:
+For very short always-needed facts that don't need a deep entry, pass `layer="lite"` explicitly:
 
 ```
 memory_write(
   content="Active stack: Next.js frontend, FastAPI backend, PostgreSQL",
   tags=["stack"],
-  layer="light"
+  layer="lite"
 )
 ```
 
@@ -91,7 +91,7 @@ memory_write(
 
 ```
 Session starts?
-  → Read injected light memory and topic index (already in context)
+  → Read injected lite memory and topic index (already in context)
   → For relevant [→ id] pointers → memory_get(id)
 
 User provides credential/token?
@@ -104,6 +104,6 @@ Completed external task?
 ## Red Flags
 
 - You call `memory_read_all` when the user just wants to see what's saved
-- You write separate light and deep entries manually instead of one `memory_write` call
+- You write separate lite and deep entries manually instead of one `memory_write` call
 - User provides a token and you use it without saving it first
-- You search deep memory for something that's already in a light pointer you can see
+- You search deep memory for something that's already in a lite pointer you can see

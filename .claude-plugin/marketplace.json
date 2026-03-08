@@ -14,7 +14,7 @@
         "source": "url",
         "url": "https://github.com/knownout/claude-project-memory.git"
       },
-      "description": "Persistent, searchable project-level memory for Claude. Two-layer store: light (always-loaded) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
+      "description": "Persistent, searchable project-level memory for Claude. Two-layer store: lite (always-loaded) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
       "version": "1.7.0",
       "strict": true
     }

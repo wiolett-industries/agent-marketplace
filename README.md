@@ -70,38 +70,38 @@ Remove `.mcp.json` entries from any projects where you ran `/project-memory:memo
 
 | Layer | Role | Size |
 |-------|------|------|
-| `light` | Short pointers to deep memories + critical always-needed facts | 1 sentence per entry |
+| `lite` | Short pointers to deep memories + critical always-needed facts | 1 sentence per entry |
 | `deep` | All actual content — detailed, fully searchable | No limit |
 
-At session start the `SessionStart` hook automatically injects two things into Claude's context:
+At session start the `UserPromptSubmit` hook automatically injects two things into Claude's context (once per session):
 
-1. **Light layer** — your pointers and critical facts
+1. **Lite layer** — your pointers and critical facts
 2. **Deep topic index** — all tags from deep entries, showing what's searchable
 
-This keeps context lean regardless of how much is stored. Claude knows what exists and fetches only what's needed via `memory_search`.
+This keeps context lean regardless of how much is stored. Claude knows what exists and fetches only what's needed via `memory_get` or `memory_search`.
 
 ### Example session context (what Claude sees on startup)
 
 ```
-## Always-loaded context (light layer)
-- Deep memory: full deployment workflow available (search: deploy, gitlab)
-- Deep memory: MinIO upload commands (search: minio, uploads)
+## Lite memory (always loaded)
+- [→ abc123] Deployment workflow via GitLab CI [deploy, gitlab]
+- [→ def456] MinIO upload commands [minio, uploads]
 - Active stack: Next.js frontend, FastAPI backend, PostgreSQL
 
-## Deep memory topics — call memory_search(topic) to load details
+## Deep memory topics — use memory_get(id) or memory_search(topic)
 credentials, deploy, gitlab, minio, pipeline, postgresql, uploads
 ```
 
-### Saving a memory (the pointer pattern)
+### Saving a memory
 
-Always save full detail to `deep`, then a 1-sentence pointer to `light`:
+`memory_write` handles everything in one call — saves full content to `deep` and auto-creates a 1-sentence lite pointer:
 
 ```
-# Full content → deep
-memory_write("Deploy: git push origin main, tag vX.Y.Z, push tag, check GitLab pipeline list_pipelines(project_id=42)", tags=["deploy","gitlab"], layer="deep")
-
-# Pointer → light
-memory_write("Deep memory: deployment workflow via GitLab CI (search: deploy, gitlab)", tags=["deploy"], layer="light")
+memory_write(
+  content="Deploy: git push origin main, tag vX.Y.Z, push tag, check GitLab pipeline list_pipelines(project_id=42)",
+  tags=["deploy", "gitlab"],
+  summary="Deployment workflow via GitLab CI"
+)
 ```
 
 ### Search
@@ -112,8 +112,9 @@ memory_write("Deep memory: deployment workflow via GitLab CI (search: deploy, gi
 
 | Tool | Description |
 |------|-------------|
-| `memory_write` | Store an entry. Default layer: `deep`. Use `light` only for 1-sentence pointers or critical facts. |
-| `memory_read_light` | Return all light entries (already injected by hook at session start). |
+| `memory_write` | Store an entry. Default layer: `deep`. Use `lite` only for 1-sentence standalone facts. |
+| `memory_get` | Fetch full content of a deep entry by ID (from a lite pointer). |
+| `memory_read_lite` | Return all lite entries (already injected by hook at session start). |
 | `memory_search` | Hybrid semantic+keyword search over deep entries. |
 | `memory_delete` | Delete an entry by ID. |
 | `memory_read_all` | Return all entries from both layers (no embeddings). |
@@ -128,4 +129,4 @@ Memory lives in `.memory/memory.db` relative to the project root. Each project h
 - **Storage:** `node:sqlite` (Node.js 22.5+ built-in)
 - **Embeddings:** OpenAI `text-embedding-3-small`
 - **Search:** Cosine similarity (0.7) + FTS5 BM25 (0.3)
-- **Session hook:** `SessionStart` injects light layer + deep topic index before first message
+- **Session hook:** `UserPromptSubmit` injects lite layer + deep topic index once per session
