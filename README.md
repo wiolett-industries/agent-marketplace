@@ -16,7 +16,7 @@ Persistent, searchable memory for Claude Code, scoped per project. Memories are 
 
 ```
 /plugin marketplace add knownout/claude-plugins
-/plugin install --scope user project-memory@knownout
+/plugin install project-memory@knownout
 ```
 
 Then enable memory for your project — run this from the project root:
