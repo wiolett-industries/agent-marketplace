@@ -1,6 +1,6 @@
 ---
 name: using-project-memory
-description: Use when the project-memory MCP server is available - at every conversation start and after completing any task involving external tools, deployments, uploads, pipelines, credentials, tokens, or project-specific workflows
+description: Use at every conversation start and after completing any task involving external tools, deployments, uploads, pipelines, credentials, tokens, or project-specific workflows
 ---
 
 # Using Project Memory
