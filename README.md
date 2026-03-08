@@ -15,7 +15,7 @@ Persistent, searchable memory for Claude Code, scoped per project. Memories are 
 ### Plugin (recommended)
 
 ```
-/plugin marketplace add knownout/claude-project-memory
+/plugin marketplace add knownout/claude-plugins
 /plugin install --scope user project-memory@knownout
 ```
 
