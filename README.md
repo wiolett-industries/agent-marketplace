@@ -125,7 +125,7 @@ memory_write(
 .memory/
   entries/        ← committed to git (source of truth)
     <id>.json     ← one file per memory entry (content + embedding)
-  memory.db       ← gitignored, rebuilt from files on startup
+  memory.db*      ← gitignored (db + WAL sidecars), rebuilt from files on startup
 ```
 
 Each entry file contains full content, tags, layer, embedding, and timestamps. Because embeddings are stored in the files, teammates can `git pull` and get fully functional semantic search without an OpenAI API key.

@@ -48,7 +48,7 @@ db.close();
 // Update .gitignore:
 // - Remove old '.memory/' blanket ignore if present
 // - Add '.memory/memory.db' (only ignore the DB, not the entry files)
-const dbIgnoreEntry = '.memory/memory.db';
+const dbIgnoreEntry = '.memory/memory.db*';
 const oldIgnoreEntry = '.memory/';
 
 if (existsSync(gitignorePath)) {
