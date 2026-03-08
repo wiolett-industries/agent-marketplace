@@ -38,13 +38,14 @@ import { DatabaseSync } from 'node:sqlite';
 
 const db = new DatabaseSync(process.env.DB_PATH);
 
-// Ensure ref column exists (migration for older DBs)
+// Migrations for older DBs
 const cols = db.prepare("PRAGMA table_info(entries)").all();
 if (!cols.some(c => c.name === 'ref')) {
   db.prepare("ALTER TABLE entries ADD COLUMN ref TEXT DEFAULT NULL").run();
 }
-
-// Migrate layer value 'light' -> 'lite' for older DBs
+if (!cols.some(c => c.name === 'hash')) {
+  db.prepare("ALTER TABLE entries ADD COLUMN hash TEXT DEFAULT NULL").run();
+}
 db.prepare("UPDATE entries SET layer = 'lite' WHERE layer = 'light'").run();
 
 const liteRows = db.prepare(

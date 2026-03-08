@@ -7,10 +7,14 @@ import { handleReadLite } from './tools/read-lite.js';
 import { handleSearch } from './tools/search.js';
 import { handleDelete } from './tools/delete.js';
 import { handleReadAll } from './tools/read-all.js';
+import { rebuildFromFiles } from './rebuild.js';
+
+// Rebuild DB from files on every startup (files are source of truth)
+rebuildFromFiles();
 
 const server = new McpServer({
   name: 'project-memory',
-  version: '1.7.0',
+  version: '1.8.0',
 });
 
 server.tool(

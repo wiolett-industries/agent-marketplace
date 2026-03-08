@@ -7,7 +7,7 @@ export interface Entry {
   content: string;
   tags: string[];
   layer: 'lite' | 'deep';
-  ref: string | null;       // lite pointer entries: ID of the deep entry they point to
+  ref: string | null;
   embedding: number[];
   created_at: number;
   updated_at: number;
@@ -31,13 +31,14 @@ interface FTSResult {
 
 let dbInstance: DatabaseSync | null = null;
 
-function getDbPath(): string {
-  const cwd = process.cwd();
-  const memoryDir = path.join(cwd, '.memory');
-  if (!fs.existsSync(memoryDir)) {
-    fs.mkdirSync(memoryDir, { recursive: true });
-  }
-  return path.join(memoryDir, 'memory.db');
+export function getDbPath(): string {
+  return path.join(process.cwd(), '.memory', 'memory.db');
+}
+
+function getMemoryDir(): string {
+  const dir = path.join(process.cwd(), '.memory');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
 }
 
 function runDDL(database: DatabaseSync, sql: string): void {
@@ -47,6 +48,7 @@ function runDDL(database: DatabaseSync, sql: string): void {
 export function getDb(): DatabaseSync {
   if (dbInstance) return dbInstance;
 
+  getMemoryDir();
   dbInstance = new DatabaseSync(getDbPath());
   dbInstance.prepare('PRAGMA journal_mode = WAL').run();
 
@@ -57,19 +59,23 @@ export function getDb(): DatabaseSync {
       tags       TEXT NOT NULL DEFAULT '[]',
       layer      TEXT NOT NULL DEFAULT 'deep',
       ref        TEXT DEFAULT NULL,
+      hash       TEXT DEFAULT NULL,
       embedding  TEXT NOT NULL DEFAULT '[]',
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
   `);
 
-  // Migration: add ref column to existing DBs that don't have it
+  // Migrations for older DBs
   const cols = dbInstance.prepare("PRAGMA table_info(entries)").all() as unknown as { name: string }[];
   if (!cols.some(c => c.name === 'ref')) {
     runDDL(dbInstance, 'ALTER TABLE entries ADD COLUMN ref TEXT DEFAULT NULL');
   }
+  if (!cols.some(c => c.name === 'hash')) {
+    runDDL(dbInstance, 'ALTER TABLE entries ADD COLUMN hash TEXT DEFAULT NULL');
+  }
 
-  // Migration: rename layer value 'light' -> 'lite' for existing DBs
+  // Migrate layer value 'light' -> 'lite' for older DBs
   dbInstance.prepare("UPDATE entries SET layer = 'lite' WHERE layer = 'light'").run();
 
   runDDL(dbInstance, `
@@ -113,33 +119,35 @@ function parseEntry(raw: RawEntry): Entry {
   };
 }
 
-export function upsertEntry(entry: Entry): void {
+export function upsertEntry(entry: Entry, hash?: string): void {
   const database = getDb();
   const existing = database.prepare('SELECT id FROM entries WHERE id = ?').get(entry.id) as unknown as { id: string } | undefined;
 
   if (existing) {
     database.prepare(`
-      UPDATE entries SET content = ?, tags = ?, layer = ?, ref = ?, embedding = ?, updated_at = ?
+      UPDATE entries SET content = ?, tags = ?, layer = ?, ref = ?, hash = ?, embedding = ?, updated_at = ?
       WHERE id = ?
     `).run(
       entry.content,
       JSON.stringify(entry.tags),
       entry.layer,
       entry.ref ?? null,
+      hash ?? null,
       JSON.stringify(entry.embedding),
       entry.updated_at,
       entry.id
     );
   } else {
     database.prepare(`
-      INSERT INTO entries (id, content, tags, layer, ref, embedding, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO entries (id, content, tags, layer, ref, hash, embedding, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       entry.id,
       entry.content,
       JSON.stringify(entry.tags),
       entry.layer,
       entry.ref ?? null,
+      hash ?? null,
       JSON.stringify(entry.embedding),
       entry.created_at,
       entry.updated_at
@@ -153,12 +161,23 @@ export function getEntryById(id: string): Entry | null {
   return row ? parseEntry(row) : null;
 }
 
-export function deleteEntry(id: string): boolean {
+export function getEntryHash(id: string): string | null {
   const database = getDb();
-  // Cascade: also delete any lite pointer that references this deep entry
+  const row = database.prepare('SELECT hash FROM entries WHERE id = ?').get(id) as unknown as { hash: string | null } | undefined;
+  return row?.hash ?? null;
+}
+
+export function deleteEntryFromDb(id: string): boolean {
+  const database = getDb();
   database.prepare("DELETE FROM entries WHERE ref = ?").run(id);
   const result = database.prepare('DELETE FROM entries WHERE id = ?').run(id);
   return (result.changes as number) > 0;
+}
+
+export function getAllDbIds(): string[] {
+  const database = getDb();
+  const rows = database.prepare("SELECT id FROM entries").all() as unknown as { id: string }[];
+  return rows.map(r => r.id);
 }
 
 export function getLiteEntries(): Entry[] {
