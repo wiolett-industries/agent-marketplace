@@ -64,6 +64,22 @@ Remove `.mcp.json` entries from any projects where you ran `/project-memory:memo
 
 ---
 
+## Why Project Memory?
+
+Claude Code's built-in memory stores facts locally — invisible to anyone else on the team.
+
+Project Memory is built around two ideas: team sharing and context efficiency.
+
+**Shared team memory.** Memory files live in `.memory/entries/` inside your project and are committed to git. Every teammate gets the same memories after a `git pull` — deployment workflows, credentials, architecture decisions, project conventions. No more explaining the same things to Claude in every new session or on every machine.
+
+**Lite and deep layers.** Not all memories need to be loaded all the time. Deep entries hold full detail — long commands, full workflows, code snippets. Lite entries are one-sentence pointers to deep ones. Only lite pointers are injected at session start, keeping context lean. When Claude needs the full detail, it fetches the specific deep entry by ID. This means you can store a large amount of knowledge without it eating your context window.
+
+**Searchable on demand.** Deep memories are searched with hybrid semantic + keyword scoring. Claude can find the right memory even without knowing the exact wording or tag.
+
+**Transparent.** Every entry is a plain JSON file you can read, edit, or delete directly. Embeddings are stored alongside content — teammates without an OpenAI API key can still load and search all existing memories after a `git pull`.
+
+---
+
 ## How it works
 
 ### Two-layer design
