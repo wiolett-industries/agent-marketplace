@@ -1,6 +1,6 @@
 # Project Memory — Claude Code Plugin
 
-Persistent, searchable memory for Claude Code, scoped per project. Stores context in a local SQLite database with hybrid semantic + keyword search powered by OpenAI embeddings.
+Persistent, searchable memory for Claude Code, scoped per project. Memories are stored as JSON files committed to git — enabling team sharing. A local SQLite database is rebuilt from files on startup for fast hybrid semantic + keyword search.
 
 ## Requirements
 
@@ -8,7 +8,7 @@ Persistent, searchable memory for Claude Code, scoped per project. Stores contex
 |-----------|---------|-------|
 | [Node.js](https://nodejs.org) | 22.5+ | Uses built-in `node:sqlite` — no native compilation needed |
 | [Claude Code](https://claude.ai/code) | latest | Plugin host |
-| OpenAI API key | — | For semantic embeddings. Keyword search still works without it. |
+| OpenAI API key | — | For semantic embeddings. Optional — keyword search works without it. Teammates can load existing embeddings from git without a key. |
 
 ## Installation
 
@@ -119,14 +119,25 @@ memory_write(
 | `memory_delete` | Delete an entry by ID. |
 | `memory_read_all` | Return all entries from both layers (no embeddings). |
 
-## Storage
+## Storage & Team Sharing
 
-Memory lives in `.memory/memory.db` relative to the project root. Each project has its own isolated database. `.memory/` is gitignored by default.
+```
+.memory/
+  entries/        ← committed to git (source of truth)
+    <id>.json     ← one file per memory entry (content + embedding)
+  memory.db       ← gitignored, rebuilt from files on startup
+```
+
+Each entry file contains full content, tags, layer, embedding, and timestamps. Because embeddings are stored in the files, teammates can `git pull` and get fully functional semantic search without an OpenAI API key.
+
+**Write flow:** file written first → DB updated. A crash between the two is self-healing — the next startup rebuild picks up the file.
+
+**Migration:** if you have an older DB-only setup, the server automatically exports all entries to files on first startup.
 
 ## Architecture
 
 - **Runtime:** TypeScript via bundled `tsx` (no build step)
-- **Storage:** `node:sqlite` (Node.js 22.5+ built-in)
-- **Embeddings:** OpenAI `text-embedding-3-small`
+- **Storage:** JSON files (source of truth) + `node:sqlite` cache (Node.js 22.5+ built-in)
+- **Embeddings:** OpenAI `text-embedding-3-small` (stored in files, not recomputed unless content changes)
 - **Search:** Cosine similarity (0.7) + FTS5 BM25 (0.3)
 - **Session hook:** `UserPromptSubmit` injects lite layer + deep topic index once per session
