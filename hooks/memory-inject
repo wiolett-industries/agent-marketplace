@@ -73,7 +73,7 @@ const topicSection = topicSet.size === 0
   ? '(none yet)'
   : Array.from(topicSet).sort().join(', ');
 
-process.stdout.write(`<project-memory>\nLoad and follow the skill: project-memory:using-project-memory\n\n## Lite memory (always loaded)\n${liteSection}\n\n## Deep memory topics — use memory_get(id) or memory_search(topic)\n${topicSection}\n</project-memory>`);
+process.stdout.write(`<project-memory>\nIMPORTANT: You MUST load the skill project-memory:using-project-memory using the Skill tool NOW before responding. This is not optional — the skill contains critical instructions for how to use project memory correctly.\n\n## Lite memory (always loaded)\n${liteSection}\n\n## Deep memory topics — use memory_get(id) or memory_search(topic)\n${topicSection}\n</project-memory>`);
 NODEJS
 )
 
