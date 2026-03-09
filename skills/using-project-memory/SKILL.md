@@ -77,6 +77,8 @@ memory_write(
 
 ## What to Save
 
+Only save things that would be **useful to Claude in a future session**:
+
 | Operation | What to capture |
 |-----------|-----------------|
 | **Uploads** | Tool, alias/bucket/path, exact command pattern |
@@ -86,6 +88,18 @@ memory_write(
 | **External APIs** | Endpoint patterns, auth, rate limits |
 | **Credentials** | Token values, where they apply |
 | **Errors + fixes** | What broke, exact fix, root cause |
+
+## What NOT to Save
+
+Do NOT write any of these to memory:
+
+- **Changelogs or update notes** — "bumped version to 1.8.3", "renamed light to lite". Git history already tracks this.
+- **Session summaries** — "today we refactored the DB layer". This is noise, not reusable knowledge.
+- **Task progress** — "step 3 is done". This is ephemeral, not persistent context.
+- **Code you just wrote** — the code is already in the codebase. Don't duplicate it in memory.
+- **Obvious facts** — "this project uses TypeScript". Claude can figure this out by reading the code.
+
+**Rule of thumb:** if it won't help Claude complete a task in a *future* session, don't save it.
 
 ## Decision Flow
 
@@ -107,3 +121,4 @@ Completed external task?
 - You write separate lite and deep entries manually instead of one `memory_write` call
 - User provides a token and you use it without saving it first
 - You search deep memory for something that's already in a lite pointer you can see
+- You save changelogs, session summaries, version bumps, or task progress to memory
