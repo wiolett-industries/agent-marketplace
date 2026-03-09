@@ -1,5 +1,5 @@
 node_modules/
-.memory/memory.db*
+.memory/
 .env
 .mcp.json
 dist/
