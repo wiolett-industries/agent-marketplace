@@ -51,7 +51,7 @@ Store this as `CWD`.
 
 ### 5. Initialize the database
 
-Run the bundled init script — it creates `.memory/memory.db` and adds `.memory/` to `.gitignore`:
+Run the bundled init script — it creates `.memory/entries/`, `.memory/memory.db`, and adds `.memory/memory.db*` to `.gitignore`:
 
 ```bash
 node --no-warnings "$PLUGIN_PATH/scripts/init-db.js" "$CWD"
@@ -77,7 +77,15 @@ Read the existing `$CWD/.mcp.json` (may not exist). Merge in the project-memory 
 
 Replace `<PLUGIN_PATH>` and `<API_KEY>` with the actual values.
 
-### 7. Report result
+### 7. Add .mcp.json to .gitignore
+
+`.mcp.json` contains API keys and machine-specific paths — it should not be committed. Add it to `.gitignore` if not already present:
+
+```bash
+grep -qxF '.mcp.json' "$CWD/.gitignore" 2>/dev/null || echo '.mcp.json' >> "$CWD/.gitignore"
+```
+
+### 8. Report result
 
 Tell the user:
 - Plugin path: `PLUGIN_PATH`

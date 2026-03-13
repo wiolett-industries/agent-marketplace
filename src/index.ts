@@ -14,7 +14,7 @@ rebuildFromFiles();
 
 const server = new McpServer({
   name: 'project-memory',
-  version: '1.8.5',
+  version: '1.8.6',
 });
 
 server.tool(
