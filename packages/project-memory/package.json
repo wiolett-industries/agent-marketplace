@@ -1,6 +1,6 @@
 {
     "name": "agent-project-memory",
-    "version": "1.8.6",
+    "version": "1.8.7",
     "type": "module",
     "scripts": {
         "start": "NODE_NO_WARNINGS=1 tsx src/index.ts"

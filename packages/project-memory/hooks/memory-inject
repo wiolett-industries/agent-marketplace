@@ -6,8 +6,11 @@
 set -euo pipefail
 
 DB_PATH="${PWD}/.memory/memory.db"
-# PPID = Claude Code's process — stable for the lifetime of a session
-FLAG_FILE="/tmp/.project-memory-injected-${PPID}"
+# Use CLAUDE_SESSION_ID if provided, otherwise fall back to the Unix session ID
+# (PPID is unreliable — Claude Code may run hooks through an intermediate shell,
+#  giving a different PPID on every invocation)
+SESSION_KEY="${CLAUDE_SESSION_ID:-$(ps -o sid= -p $$ 2>/dev/null | tr -d ' ')}"
+FLAG_FILE="/tmp/.project-memory-injected-${SESSION_KEY}"
 
 # Once per session: if already injected, exit silently
 if [ -f "$FLAG_FILE" ]; then
