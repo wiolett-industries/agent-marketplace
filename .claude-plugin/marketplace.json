@@ -10,22 +10,14 @@
   "plugins": [
     {
       "name": "project-memory",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/wiolett-industries/agent-marketplace.git",
-        "path": "packages/project-memory"
-      },
+      "source": "./packages/project-memory",
       "description": "Persistent, searchable project-level memory for Claude. Two-layer store: lite (always-loaded) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
       "version": "1.8.6",
       "strict": true
     },
     {
       "name": "papers",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/wiolett-industries/agent-marketplace.git",
-        "path": "packages/papers"
-      },
+      "source": "./packages/papers",
       "description": "Interact with Papers documents on your behalf using API tokens. Manage documents, directories, shares, and attachments.",
       "version": "1.0.0",
       "strict": true
