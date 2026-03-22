@@ -1,0 +1,20 @@
+{
+  "name": "claude-papers",
+  "version": "1.0.0",
+  "description": "Interact with Papers documents on your behalf using API tokens",
+  "author": "wiolett-industries",
+  "mcpServer": {
+    "command": "npx",
+    "args": ["tsx", "src/index.ts"],
+    "env": {
+      "PAPERS_HOST": {
+        "description": "Your Papers instance URL (e.g. https://app.wiolett.net)",
+        "required": true
+      },
+      "PAPERS_TOKEN": {
+        "description": "Your API access token (tok_...)",
+        "required": true
+      }
+    }
+  }
+}

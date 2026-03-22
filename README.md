@@ -15,8 +15,8 @@ Persistent, searchable memory for Claude Code, scoped per project. Memories are 
 ### Plugin (recommended)
 
 ```
-/plugin marketplace add knownout/claude-project-memory
-/plugin install project-memory@knownout
+/plugin marketplace add wiolett-industries/agent-marketplace
+/plugin install project-memory@wiolett-industries
 ```
 
 Then enable memory for your project — run this from the project root:
@@ -33,8 +33,8 @@ Repeat `/project-memory:memory-setup` in each project where you want memory enab
 
 1. Clone and install:
    ```bash
-   git clone https://github.com/knownout/claude-project-memory.git
-   cd claude-project-memory && npm install
+   git clone https://github.com/wiolett-industries/agent-marketplace.git
+   cd agent-marketplace/packages/project-memory && npm install
    ```
 
 2. Add to your project's `.mcp.json`:
@@ -42,8 +42,8 @@ Repeat `/project-memory:memory-setup` in each project where you want memory enab
    {
      "mcpServers": {
        "project-memory": {
-         "command": "/path/to/claude-project-memory/node_modules/.bin/tsx",
-         "args": ["/path/to/claude-project-memory/src/index.ts"],
+         "command": "/path/to/agent-marketplace/packages/project-memory/node_modules/.bin/tsx",
+         "args": ["/path/to/agent-marketplace/packages/project-memory/src/index.ts"],
          "env": {
            "OPENAI_API_KEY": "sk-..."
          }
@@ -57,7 +57,7 @@ Repeat `/project-memory:memory-setup` in each project where you want memory enab
 ## Uninstall
 
 ```
-/plugin uninstall project-memory@knownout
+/plugin uninstall project-memory@wiolett-industries
 ```
 
 Remove `.mcp.json` entries from any projects where you ran `/project-memory:memory-setup`.

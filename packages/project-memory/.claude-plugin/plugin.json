@@ -3,6 +3,6 @@
   "version": "1.8.6",
   "description": "Persistent, searchable project-level memory for Claude. Two-layer store: lite (always-loaded context) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
   "author": {
-    "name": "knownout"
+    "name": "wiolett-industries"
   }
 }
