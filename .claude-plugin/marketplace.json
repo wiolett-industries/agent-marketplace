@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Wiolett Industries agent plugins for Claude Code",
-    "version": "1.8.7"
+    "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "project-memory",
       "source": "./packages/project-memory",
       "description": "Persistent, searchable project-level memory for Claude. Two-layer store: lite (always-loaded) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
-      "version": "1.8.7",
+      "version": "1.8.8",
       "strict": true
     },
     {

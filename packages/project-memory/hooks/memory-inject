@@ -9,7 +9,15 @@ DB_PATH="${PWD}/.memory/memory.db"
 # Use CLAUDE_SESSION_ID if provided, otherwise fall back to the Unix session ID
 # (PPID is unreliable — Claude Code may run hooks through an intermediate shell,
 #  giving a different PPID on every invocation)
-SESSION_KEY="${CLAUDE_SESSION_ID:-$(ps -o sid= -p $$ 2>/dev/null | tr -d ' ')}"
+# macOS `ps` uses `sess`; Linux `ps` uses `sid`. Try both.
+SESSION_KEY="${CLAUDE_SESSION_ID:-}"
+if [ -z "$SESSION_KEY" ]; then
+    SESSION_KEY="$(ps -o sess= -p $$ 2>/dev/null | tr -d ' ' || true)"
+fi
+if [ -z "$SESSION_KEY" ]; then
+    SESSION_KEY="$(ps -o sid= -p $$ 2>/dev/null | tr -d ' ' || true)"
+fi
+SESSION_KEY="${SESSION_KEY:-$$}"
 FLAG_FILE="/tmp/.project-memory-injected-${SESSION_KEY}"
 
 # Once per session: if already injected, exit silently
