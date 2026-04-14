@@ -1,5 +1,5 @@
 ---
-description: Set up project-memory for the current repo. Installs package dependencies, initializes .memory, and writes a project-local .mcp.json.
+description: Set up project-memory for the current repo. Installs package dependencies, initializes .memory, and writes a project-local .codex/config.toml.
 argument-hint: Optional OpenAI API key (sk-...)
 ---
 
@@ -13,6 +13,6 @@ bash ./scripts/setup-current-project.sh "$ARGUMENTS"
 
 After it completes, report:
 - `.memory/entries/` and `.memory/memory.db` were initialized for the current repo
-- `.mcp.json` now contains the `project-memory` MCP server entry
-- `.mcp.json` was added to `.gitignore` if needed
+- `.codex/config.toml` now contains the `project-memory` MCP server entry
+- `.codex/config.toml` was added to `.gitignore` if needed
 - Re-run the same command in any other project where memory should be enabled

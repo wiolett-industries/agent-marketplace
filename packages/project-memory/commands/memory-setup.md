@@ -1,5 +1,5 @@
 ---
-description: Set up the project-memory MCP server for the current project. Installs npm dependencies, initializes .memory, and registers the server in .mcp.json in the current working directory.
+description: Set up the project-memory MCP server for the current project. Installs npm dependencies, initializes .memory, and registers the server in .codex/config.toml in the current working directory.
 argument-hint: Optional OpenAI API key (sk-...)
 ---
 
@@ -15,8 +15,8 @@ bash ./scripts/setup-current-project.sh "$ARGUMENTS"
 
 Then report:
 - Database initialized in `PWD/.memory/`
-- MCP server registered in `PWD/.mcp.json`
-- `.mcp.json` added to `.gitignore` if needed
+- MCP server registered in `PWD/.codex/config.toml`
+- `.codex/config.toml` added to `.gitignore` if needed
 - Re-run the same command in any other project where memory should be enabled
 
 ---
@@ -27,4 +27,4 @@ Then report:
 
 **OPENAI_API_KEY missing** — semantic search will degrade to keyword-only; still functional
 
-**MCP server not appearing** — restart the MCP-capable host after editing `.mcp.json`
+**MCP server not appearing** — restart Codex after editing `.codex/config.toml`

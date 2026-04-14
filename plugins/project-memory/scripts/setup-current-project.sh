@@ -7,51 +7,58 @@ PROJECT_DIR="${PWD}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PACKAGE_DIR="$(cd "$SCRIPT_DIR/../../../packages/project-memory" && pwd)"
-MCP_PATH="$PROJECT_DIR/.mcp.json"
+CODEX_DIR="$PROJECT_DIR/.codex"
+CONFIG_PATH="$CODEX_DIR/config.toml"
 SERVER_SCRIPT="$PLUGIN_DIR/scripts/start-mcp.sh"
 
 (cd "$PACKAGE_DIR" && npm install --prefer-offline)
 node --no-warnings "$PACKAGE_DIR/scripts/init-db.js" "$PROJECT_DIR"
 
-PROJECT_DIR="$PROJECT_DIR" MCP_PATH="$MCP_PATH" SERVER_SCRIPT="$SERVER_SCRIPT" API_KEY="$API_KEY" node --input-type=module <<'NODEJS'
+mkdir -p "$CODEX_DIR"
+
+CONFIG_PATH="$CONFIG_PATH" SERVER_SCRIPT="$SERVER_SCRIPT" API_KEY="$API_KEY" node --input-type=module <<'NODEJS'
 import fs from 'node:fs';
 
-const mcpPath = process.env.MCP_PATH;
+const configPath = process.env.CONFIG_PATH;
 const serverScript = process.env.SERVER_SCRIPT;
 const apiKey = process.env.API_KEY;
+const startMarker = '# BEGIN project-memory';
+const endMarker = '# END project-memory';
 
-let payload = {};
-if (fs.existsSync(mcpPath)) {
-  payload = JSON.parse(fs.readFileSync(mcpPath, 'utf8'));
-}
-if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-  payload = {};
-}
-if (!payload.mcpServers || typeof payload.mcpServers !== 'object' || Array.isArray(payload.mcpServers)) {
-  payload.mcpServers = {};
-}
-
-payload.mcpServers['project-memory'] = {
-  command: 'bash',
-  args: [serverScript],
-};
+const lines = [
+  startMarker,
+  '[mcp_servers.project-memory]',
+  'command = "bash"',
+  `args = ["${serverScript.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"]`,
+];
 
 if (apiKey) {
-  payload.mcpServers['project-memory'].env = {
-    OPENAI_API_KEY: apiKey,
-  };
+  lines.push('', '[mcp_servers.project-memory.env]');
+  lines.push(`OPENAI_API_KEY = "${apiKey.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`);
+}
+lines.push(endMarker);
+const block = `${lines.join('\n')}\n`;
+
+let content = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : '';
+const regex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}\\n?`, 'm');
+if (regex.test(content)) {
+  content = content.replace(regex, block);
+} else {
+  if (content && !content.endsWith('\n')) content += '\n';
+  if (content) content += '\n';
+  content += block;
 }
 
-fs.writeFileSync(mcpPath, `${JSON.stringify(payload, null, 2)}\n`);
+fs.writeFileSync(configPath, content);
 NODEJS
 
-if ! grep -qxF '.mcp.json' "$PROJECT_DIR/.gitignore" 2>/dev/null; then
-  printf '\n.mcp.json\n' >> "$PROJECT_DIR/.gitignore"
+if ! grep -qxF '.codex/config.toml' "$PROJECT_DIR/.gitignore" 2>/dev/null; then
+  printf '\n.codex/config.toml\n' >> "$PROJECT_DIR/.gitignore"
 fi
 
 cat <<EOF
 Initialized project-memory for: $PROJECT_DIR
 Database: $PROJECT_DIR/.memory/memory.db
-MCP config: $MCP_PATH
+Codex config: $CONFIG_PATH
 Server script: $SERVER_SCRIPT
 EOF

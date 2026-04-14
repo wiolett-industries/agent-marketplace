@@ -14,17 +14,17 @@ Persistent, searchable project memory for Codex and other MCP-capable agents. Me
 
 ### Codex Plugin (recommended)
 
-Install the `project-memory` plugin from this repo's Codex marketplace, then enable memory for the current project from the project root:
+Install the `project-memory` plugin from this repo's Codex marketplace, then enable memory for the current project:
 
 ```
 project-memory:memory-setup sk-proj-your-openai-key
 ```
 
-The setup command installs package dependencies, initializes `.memory/`, writes a project-local `.mcp.json`, and adds `.mcp.json` to `.gitignore` if needed.
+The setup command installs package dependencies, initializes `.memory/`, writes a project-local `.codex/config.toml`, and adds `.codex/config.toml` to `.gitignore` if needed.
 
 Repeat the setup command in each project where you want memory enabled.
 
-### Manual MCP Setup
+### Manual Codex Setup
 
 1. Clone and install:
    ```bash
@@ -32,22 +32,19 @@ Repeat the setup command in each project where you want memory enabled.
    cd agent-marketplace/packages/project-memory && npm install
    ```
 
-2. Add to your project's `.mcp.json`:
-   ```json
-   {
-     "mcpServers": {
-       "project-memory": {
-         "command": "/path/to/agent-marketplace/packages/project-memory/node_modules/.bin/tsx",
-         "args": ["/path/to/agent-marketplace/packages/project-memory/src/index.ts"],
-         "env": {
-           "OPENAI_API_KEY": "sk-..."
-         }
-       }
-     }
-   }
+2. Add to your project's `.codex/config.toml`:
+   ```toml
+   [mcp_servers.project-memory]
+   command = "bash"
+   args = ["/path/to/agent-marketplace/plugins/project-memory/scripts/start-mcp.sh"]
+
+   [mcp_servers.project-memory.env]
+   OPENAI_API_KEY = "sk-..."
    ```
 
-3. If you are using the Codex plugin, the bundled hook will inject lite memory automatically once the database exists. Manual MCP-only installs still get all memory tools but do not get plugin-managed hooks.
+3. Add `.codex/config.toml` to your project's `.gitignore`.
+
+4. If you are using the Codex plugin, the bundled hook will inject lite memory automatically once the database exists. Manual MCP-only installs still get all memory tools but do not get plugin-managed hooks.
 
 ---
 
