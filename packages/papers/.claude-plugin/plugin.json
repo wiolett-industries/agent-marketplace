@@ -1,5 +1,5 @@
 {
-  "name": "claude-papers",
+  "name": "papers",
   "version": "1.0.0",
   "description": "Interact with Papers documents on your behalf using API tokens",
   "author": "wiolett-industries",

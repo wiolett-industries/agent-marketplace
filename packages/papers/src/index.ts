@@ -16,7 +16,7 @@ const allTools = [...documentTools, ...directoryTools, ...shareTools, ...attachm
 const client = new PapersClient();
 
 const server = new Server(
-  { name: "claude-papers", version: "1.0.0" },
+  { name: "papers", version: "1.0.0" },
   { capabilities: { tools: {} } }
 );
 

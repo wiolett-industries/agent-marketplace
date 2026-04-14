@@ -4,21 +4,21 @@
     "name": "wiolett-industries"
   },
   "metadata": {
-    "description": "Wiolett Industries agent plugins for Claude Code",
+    "description": "Wiolett Industries agent plugins for Codex, Claude Code, and MCP-capable hosts",
     "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "project-memory",
       "source": "./packages/project-memory",
-      "description": "Persistent, searchable project-level memory for Claude. Two-layer store: lite (always-loaded) and deep (hybrid semantic+keyword search via OpenAI embeddings).",
+      "description": "Persistent, searchable project-level memory with lite and deep layers plus hybrid semantic and keyword search.",
       "version": "1.8.8",
       "strict": true
     },
     {
       "name": "papers",
       "source": "./packages/papers",
-      "description": "Interact with Papers documents on your behalf using API tokens. Manage documents, directories, shares, and attachments.",
+      "description": "Interact with Papers documents using API tokens. Manage documents, directories, shares, and attachments.",
       "version": "1.0.0",
       "strict": true
     }

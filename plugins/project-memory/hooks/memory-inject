@@ -5,8 +5,6 @@
 set -euo pipefail
 
 DB_PATH="${PWD}/.memory/memory.db"
-# Use the host session ID if provided, otherwise fall back to the Unix session ID.
-# macOS `ps` uses `sess`; Linux `ps` uses `sid`. Try both.
 SESSION_KEY="${CODEX_SESSION_ID:-${CLAUDE_SESSION_ID:-}}"
 if [ -z "$SESSION_KEY" ]; then
     SESSION_KEY="$(ps -o sess= -p $$ 2>/dev/null | tr -d ' ' || true)"
@@ -17,13 +15,16 @@ fi
 SESSION_KEY="${SESSION_KEY:-$$}"
 FLAG_FILE="/tmp/.project-memory-injected-${SESSION_KEY}"
 
-# Once per session: if already injected, exit silently
 if [ -f "$FLAG_FILE" ]; then
     echo '{}'
     exit 0
 fi
 
-# Mark as injected for this session
+if [ ! -f "$DB_PATH" ]; then
+    echo '{}'
+    exit 0
+fi
+
 touch "$FLAG_FILE"
 
 emit_message() {
@@ -36,17 +37,11 @@ emit_message() {
     printf '{"systemMessage":"%s"}\n' "$msg"
 }
 
-if [ ! -f "$DB_PATH" ]; then
-    echo '{}'
-    exit 0
-fi
-
 MEMORY_OUTPUT=$(DB_PATH="$DB_PATH" node --no-warnings --input-type=module <<'NODEJS'
 import { DatabaseSync } from 'node:sqlite';
 
 const db = new DatabaseSync(process.env.DB_PATH);
 
-// Migrations for older DBs
 const cols = db.prepare("PRAGMA table_info(entries)").all();
 if (!cols.some(c => c.name === 'ref')) {
   db.prepare("ALTER TABLE entries ADD COLUMN ref TEXT DEFAULT NULL").run();

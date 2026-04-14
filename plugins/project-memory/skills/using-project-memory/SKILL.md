@@ -69,17 +69,17 @@ Save memory proactively whenever any of the following happens during a session. 
 - **External API interactions** — endpoint patterns, auth method, rate limits, quirks
 - **Infrastructure setup** — server config, DNS, SSL, container orchestration
 - **Build or dev environment setup** — required env vars, tool versions, config files
-- **Debugging a tricky issue** — root cause, the fix, and why it works (so future sessions skip the investigation)
+- **Debugging a tricky issue** — root cause, the fix, and why it works
 - **Integration with third-party services** — Slack, GitHub, S3, Sentry, etc. — account details, webhook URLs, config
 
 ### Save when you discover:
-- **Project-specific gotchas** — things that break if done the "obvious" way
+- **Project-specific gotchas** — things that break if done the obvious way
 - **Undocumented dependencies** — services, tools, or config the project relies on but doesn't document
 - **Team preferences** — "always use bun, not npm", "never force push to main", "use conventional commits"
 
 ## Credentials and Tokens — Save Immediately
 
-When the user provides any credential, save it **before using it**. Entry files are committed to git — only store credentials if the repo is private or the team is trusted.
+When the user provides any credential, save it before using it. Entry files are committed to git — only store credentials if the repo is private or the team is trusted.
 
 ```
 memory_write(
@@ -89,9 +89,9 @@ memory_write(
 )
 ```
 
-## Standalone Lite Facts (no deep counterpart)
+## Standalone Lite Facts
 
-For very short always-needed facts that don't need a deep entry, pass `layer="lite"` explicitly:
+For very short always-needed facts that do not need a deep entry, pass `layer="lite"` explicitly:
 
 ```
 memory_write(
@@ -105,44 +105,11 @@ memory_write(
 
 Do NOT write any of these to memory:
 
-- **Changelogs or update notes** — "bumped version to 1.8.3", "renamed light to lite". Git history already tracks this.
-- **Session summaries** — "today we refactored the DB layer". This is noise, not reusable knowledge.
-- **Task progress** — "step 3 is done". This is ephemeral, not persistent context.
-- **Code you just wrote** — the code is already in the codebase. Don't duplicate it in memory.
-- **Obvious facts** — "this project uses TypeScript". The agent can figure this out by reading the code.
-- **Speculative plans** — "we might add feature X later". Save only what IS, not what might be.
+- **Changelogs or update notes** — git history already tracks these
+- **Session summaries** — noise, not reusable knowledge
+- **Task progress** — ephemeral, not persistent context
+- **Code you just wrote** — already in the codebase
+- **Obvious facts** — the agent can figure them out by reading the code
+- **Speculative plans** — save what is true now, not what might happen later
 
 **Rule of thumb:** if it won't help the agent complete a task in a future session, don't save it.
-
-## Decision Flow
-
-```
-Session starts?
-  → Read injected lite memory and topic index (already in context)
-  → For relevant [→ id] pointers → memory_get(id)
-
-User provides credential/token/secret?
-  → memory_write(...) IMMEDIATELY before using it
-
-User explains a convention, preference, or workflow?
-  → memory_write(...) right away
-
-Completed external task (deploy, upload, pipeline, DB op, API call)?
-  → memory_write(content=<full detail>, tags=[...], summary=<1 sentence>)
-
-Discovered a gotcha, undocumented dependency, or non-obvious fix?
-  → memory_write(...) before moving on
-
-User corrected you on something?
-  → memory_write the correct approach
-```
-
-## Red Flags
-
-- You call `memory_read_all` when the user just wants to see what's saved
-- You write separate lite and deep entries manually instead of one `memory_write` call
-- User provides a token and you use it without saving it first
-- You search deep memory for something that's already in a lite pointer you can see
-- You save changelogs, session summaries, version bumps, or task progress to memory
-- User explains a workflow and you don't save it
-- You complete an external operation and don't save the steps

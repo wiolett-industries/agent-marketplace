@@ -1,35 +1,30 @@
-# Project Memory — Claude Code Plugin
+# Project Memory for Codex and MCP Hosts
 
-Persistent, searchable memory for Claude Code, scoped per project. Memories are stored as JSON files committed to git — enabling team sharing. A local SQLite database is rebuilt from files on startup for fast hybrid semantic + keyword search.
+Persistent, searchable project memory for Codex and other MCP-capable agents. Memories are stored as JSON files committed to git, and a local SQLite database is rebuilt from those files on startup for fast hybrid semantic and keyword search.
 
 ## Requirements
 
 | Dependency | Version | Notes |
 |-----------|---------|-------|
 | [Node.js](https://nodejs.org) | 22.5+ | Uses built-in `node:sqlite` — no native compilation needed |
-| [Claude Code](https://claude.ai/code) | latest | Plugin host |
+| Codex or another MCP host | latest | Optional plugin host |
 | OpenAI API key | — | For semantic embeddings. Optional — keyword search works without it. Teammates can load existing embeddings from git without a key. |
 
 ## Installation
 
-### Plugin (recommended)
+### Codex Plugin (recommended)
+
+Install the `project-memory` plugin from this repo's Codex marketplace, then enable memory for the current project from the project root:
 
 ```
-/plugin marketplace add wiolett-industries/agent-marketplace
-/plugin install project-memory@wiolett-industries
+project-memory:memory-setup sk-proj-your-openai-key
 ```
 
-Then enable memory for your project — run this from the project root:
+The setup command installs package dependencies, initializes `.memory/`, writes a project-local `.mcp.json`, and adds `.mcp.json` to `.gitignore` if needed.
 
-```
-/project-memory:memory-setup sk-proj-your-openai-key
-```
+Repeat the setup command in each project where you want memory enabled.
 
-Restart Claude Code. The `project-memory` MCP tools will be active for that project.
-
-Repeat `/project-memory:memory-setup` in each project where you want memory enabled.
-
-### Manual
+### Manual MCP Setup
 
 1. Clone and install:
    ```bash
@@ -52,29 +47,21 @@ Repeat `/project-memory:memory-setup` in each project where you want memory enab
    }
    ```
 
-3. Restart Claude Code.
-
-## Uninstall
-
-```
-/plugin uninstall project-memory@wiolett-industries
-```
-
-Remove `.mcp.json` entries from any projects where you ran `/project-memory:memory-setup`.
+3. If you are using the Codex plugin, the bundled hook will inject lite memory automatically once the database exists. Manual MCP-only installs still get all memory tools but do not get plugin-managed hooks.
 
 ---
 
 ## Why Project Memory?
 
-Claude Code's built-in memory stores facts locally — invisible to anyone else on the team.
+Most host-local memory features store facts on one machine for one user.
 
 Project Memory is built around two ideas: team sharing and context efficiency.
 
-**Shared team memory.** Memory files live in `.memory/entries/` inside your project and are committed to git. Every teammate gets the same memories after a `git pull` — deployment workflows, credentials, architecture decisions, project conventions. No more explaining the same things to Claude in every new session or on every machine.
+**Shared team memory.** Memory files live in `.memory/entries/` inside your project and are committed to git. Every teammate gets the same memories after a `git pull` — deployment workflows, credentials, architecture decisions, project conventions. No more re-explaining the same things in every new session or on every machine.
 
-**Lite and deep layers.** Not all memories need to be loaded all the time. Deep entries hold full detail — long commands, full workflows, code snippets. Lite entries are one-sentence pointers to deep ones. Only lite pointers are injected at session start, keeping context lean. When Claude needs the full detail, it fetches the specific deep entry by ID. This means you can store a large amount of knowledge without it eating your context window.
+**Lite and deep layers.** Not all memories need to be loaded all the time. Deep entries hold full detail — long commands, full workflows, code snippets. Lite entries are one-sentence pointers to deep ones. Only lite pointers are injected at session start, keeping context lean. When the agent needs the full detail, it fetches the specific deep entry by ID.
 
-**Searchable on demand.** Deep memories are searched with hybrid semantic + keyword scoring. Claude can find the right memory even without knowing the exact wording or tag.
+**Searchable on demand.** Deep memories are searched with hybrid semantic and keyword scoring. The agent can find the right memory even without knowing the exact wording or tag.
 
 **Transparent.** Every entry is a plain JSON file you can read, edit, or delete directly. Embeddings are stored alongside content — teammates without an OpenAI API key can still load and search all existing memories after a `git pull`.
 
@@ -89,14 +76,14 @@ Project Memory is built around two ideas: team sharing and context efficiency.
 | `lite` | Short pointers to deep memories + critical always-needed facts | 1 sentence per entry |
 | `deep` | All actual content — detailed, fully searchable | No limit |
 
-At session start the `UserPromptSubmit` hook automatically injects two things into Claude's context (once per session):
+At session start the `UserPromptSubmit` hook automatically injects two things into the conversation context (once per session):
 
 1. **Lite layer** — your pointers and critical facts
 2. **Deep topic index** — all tags from deep entries, showing what's searchable
 
-This keeps context lean regardless of how much is stored. Claude knows what exists and fetches only what's needed via `memory_get` or `memory_search`.
+This keeps context lean regardless of how much is stored. The agent knows what exists and fetches only what's needed via `memory_get` or `memory_search`.
 
-### Example session context (what Claude sees on startup)
+### Example session context
 
 ```
 ## Lite memory (always loaded)

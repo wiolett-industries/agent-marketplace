@@ -1,0 +1,42 @@
+{
+  "name": "project-memory",
+  "version": "1.8.8",
+  "description": "Persistent, searchable project memory for Codex and MCP-capable agents.",
+  "author": {
+    "name": "Wiolett Industries",
+    "url": "https://wiolett.net"
+  },
+  "homepage": "https://github.com/wiolett-industries/agent-marketplace/tree/main/packages/project-memory",
+  "repository": "https://github.com/wiolett-industries/agent-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "codex",
+    "mcp",
+    "knowledge",
+    "project"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks.json",
+  "interface": {
+    "displayName": "Project Memory",
+    "shortDescription": "Shared project memory with lite and deep layers",
+    "longDescription": "Adds project-scoped memory workflows to Codex. Install the plugin, run the bundled setup command inside a repo, and use the MCP server plus startup hook to keep shared project knowledge searchable and lightweight.",
+    "developerName": "Wiolett Industries",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://wiolett.net",
+    "privacyPolicyURL": "https://wiolett.net",
+    "termsOfServiceURL": "https://wiolett.net",
+    "defaultPrompt": [
+      "Set up project memory in this repo",
+      "Search our stored workflow notes",
+      "Save this deployment runbook to memory"
+    ],
+    "brandColor": "#1F6FEB",
+    "screenshots": []
+  }
+}

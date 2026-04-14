@@ -1,11 +1,11 @@
 ---
-description: Set up the claude-papers MCP server globally. Installs npm dependencies and registers the server in ~/.claude.json so Papers tools are available in every project.
+description: Set up the papers MCP server manually. Install npm dependencies and register the server in whatever user-level MCP config your host uses.
 argument-hint: "[PAPERS_HOST] [PAPERS_TOKEN]  (e.g. https://papers.wiolett.net tok_...)"
 ---
 
 # Papers Setup
 
-You are setting up the `claude-papers` MCP server **globally** for the current user. This only needs to be done once — the Papers tools will be available in every Claude Code session.
+You are setting up the `papers` MCP server for the current user. This only needs to be done once per machine or profile.
 
 ## Steps
 
@@ -26,23 +26,30 @@ If still missing, ask the user:
 > Please provide your Papers instance URL (e.g. https://papers.wiolett.net):
 > Please provide your Papers API token (tok_...):
 
-### 2. Register MCP server globally
+### 2. Register the MCP server
 
-```bash
-claude mcp add papers -s user \
-  -e PAPERS_HOST="<PAPERS_HOST>" \
-  -e PAPERS_TOKEN="<PAPERS_TOKEN>" \
-  -- /path/to/agent-marketplace/packages/papers/node_modules/.bin/tsx \
-     /path/to/agent-marketplace/packages/papers/src/index.ts
+Add this entry to the user-level MCP config used by the current host:
+
+```json
+{
+  "mcpServers": {
+    "papers": {
+      "command": "/path/to/agent-marketplace/packages/papers/node_modules/.bin/tsx",
+      "args": ["/path/to/agent-marketplace/packages/papers/src/index.ts"],
+      "env": {
+        "PAPERS_HOST": "<PAPERS_HOST>",
+        "PAPERS_TOKEN": "<PAPERS_TOKEN>"
+      }
+    }
+  }
+}
 ```
-
-Replace `<PAPERS_HOST>` and `<PAPERS_TOKEN>` with the actual values.
 
 ### 5. Report result
 
 Tell the user:
-- MCP server registered globally in `~/.claude.json`
-- **Restart Claude Code** to activate the `papers` MCP tools in all projects
+- MCP server registered in the host's user-level MCP config
+- Restart the host if the `papers` tools do not appear immediately
 
 ---
 
@@ -52,4 +59,4 @@ Tell the user:
 
 **Token rejected** — generate a new token in Papers: profile dropdown → Settings → API Tokens
 
-**MCP server not appearing** — fully quit and relaunch Claude Code after setup
+**MCP server not appearing** — fully quit and relaunch the host after setup

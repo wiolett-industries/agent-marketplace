@@ -1,0 +1,42 @@
+{
+  "name": "papers",
+  "version": "1.0.0",
+  "description": "Papers document workflows for Codex and other MCP-capable clients.",
+  "author": {
+    "name": "Wiolett Industries",
+    "url": "https://wiolett.net"
+  },
+  "homepage": "https://github.com/wiolett-industries/agent-marketplace/tree/main/packages/papers",
+  "repository": "https://github.com/wiolett-industries/agent-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "papers",
+    "documents",
+    "codex",
+    "mcp",
+    "knowledge-base"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Papers",
+    "shortDescription": "Work with Papers documents, shares, and attachments",
+    "longDescription": "Connect Codex to the Papers document platform through the bundled MCP server. Manage documents, folders, shares, and attachments with your Papers API token.",
+    "developerName": "Wiolett Industries",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://wiolett.net",
+    "privacyPolicyURL": "https://wiolett.net",
+    "termsOfServiceURL": "https://wiolett.net",
+    "defaultPrompt": [
+      "Find the latest Papers spec draft",
+      "Create a document in Papers from these notes",
+      "Share this document with an editor"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  }
+}

@@ -1,15 +1,12 @@
-# papers — Claude Code MCP Plugin
+# papers — Codex and MCP Plugin
 
-Interact with [Papers](https://wiolett.net) documents directly from Claude Code. Create, edit, organize documents and manage shares — all via natural language.
+Interact with [Papers](https://wiolett.net) documents directly from Codex or any MCP-capable client. Create, edit, organize documents, and manage shares through natural-language tool calls.
 
 ## Installation
 
-### Plugin (recommended)
+### Codex Plugin (recommended)
 
-```
-/plugin marketplace add wiolett-industries/agent-marketplace
-/plugin install papers@wiolett-industries
-```
+Install the `papers` plugin from this repo's Codex marketplace. The plugin root is [`plugins/papers`](../../plugins/papers).
 
 ### Manual
 
@@ -20,15 +17,22 @@ Interact with [Papers](https://wiolett.net) documents directly from Claude Code.
    ```
 
 2. Register the MCP server:
-   ```bash
-   claude mcp add papers -s user \
-     -e PAPERS_HOST=https://papers.wiolett.net \
-     -e PAPERS_TOKEN=tok_... \
-     -- /path/to/agent-marketplace/packages/papers/node_modules/.bin/tsx \
-        /path/to/agent-marketplace/packages/papers/src/index.ts
+   ```json
+   {
+     "mcpServers": {
+       "papers": {
+         "command": "/path/to/agent-marketplace/packages/papers/node_modules/.bin/tsx",
+         "args": ["/path/to/agent-marketplace/packages/papers/src/index.ts"],
+         "env": {
+           "PAPERS_HOST": "https://papers.wiolett.net",
+           "PAPERS_TOKEN": "tok_..."
+         }
+       }
+     }
+   }
    ```
 
-Restart Claude Code. The `papers` MCP tools will be available in every project.
+Restart the MCP-capable host after adding the server. The `papers_*` tools will then be available.
 
 Generate your API token in Papers: **profile dropdown → Settings → API Tokens**.
 

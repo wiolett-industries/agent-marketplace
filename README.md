@@ -1,37 +1,29 @@
-# Wiolett Industries — Agent Marketplace
+# Wiolett Industries Codex Marketplace
 
-Claude Code plugin marketplace for [Wiolett Industries](https://wiolett.net).
+Codex-first plugin marketplace for [Wiolett Industries](https://wiolett.net). This repo now exposes a Codex marketplace manifest under `.agents/plugins/` and plugin roots under `plugins/`, while the MCP server implementations continue to live under `packages/`.
 
-## Installation
+## Codex Layout
 
-Add this marketplace to Claude Code:
+- Marketplace manifest: [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
+- Plugin roots:
+  - [`plugins/project-memory`](./plugins/project-memory)
+  - [`plugins/papers`](./plugins/papers)
+- MCP package source:
+  - [`packages/project-memory`](./packages/project-memory)
+  - [`packages/papers`](./packages/papers)
 
-```
-/plugin marketplace add wiolett-industries/agent-marketplace
-```
+Point Codex at this repo's local marketplace manifest to install the plugins.
 
 ## Plugins
 
-### [project-memory](./packages/project-memory)
+### [project-memory](./plugins/project-memory)
 
-Persistent, searchable memory for Claude Code, scoped per project. Memories are stored as JSON files committed to git — enabling team sharing. Two-layer store: lite (always-loaded context) and deep (hybrid semantic+keyword search via OpenAI embeddings).
+Persistent, searchable project memory for Codex and other MCP-capable agents. Memory is stored as JSON files committed to the project repo, with a lite/deep split to keep default context lean.
 
-```
-/plugin install project-memory@wiolett-industries
-```
+See [packages/project-memory/README.md](./packages/project-memory/README.md) for setup and manual MCP configuration details.
 
-### [papers](./packages/papers)
+### [papers](./plugins/papers)
 
-Interact with [Papers](https://wiolett.net) documents directly from Claude Code. Create, edit, organize documents and manage shares via natural language.
+Interact with [Papers](https://wiolett.net) documents directly from Codex or any MCP-capable client. Create, edit, organize documents, shares, and attachments through the bundled Papers MCP server.
 
-```
-/plugin install papers@wiolett-industries
-```
-
-## Repository Structure
-
-```
-packages/
-  project-memory/   — project memory MCP plugin
-  papers/           — Papers MCP plugin
-```
+See [packages/papers/README.md](./packages/papers/README.md) for setup and manual MCP configuration details.
